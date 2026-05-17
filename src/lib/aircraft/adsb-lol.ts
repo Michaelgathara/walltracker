@@ -50,7 +50,12 @@ export async function fetchNearbyAircraft({
 
   return {
     aircraft: parsed.ac
-      .filter((aircraft) => aircraft.hex && aircraft.lat && aircraft.lon)
+      .filter(
+        (aircraft) =>
+          aircraft.hex &&
+          aircraft.lat !== undefined &&
+          aircraft.lon !== undefined,
+      )
       .map((aircraft): Aircraft => {
         const altitudeFeet =
           typeof aircraft.alt_baro === "number" ? aircraft.alt_baro : null;

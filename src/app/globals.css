@@ -46,30 +46,22 @@ button {
   width: 100vw;
   height: 100vh;
   isolation: isolate;
-  background:
-    radial-gradient(circle at 18% 20%, rgba(84, 179, 255, 0.22), transparent 28rem),
-    radial-gradient(circle at 82% 12%, rgba(174, 101, 255, 0.16), transparent 26rem),
-    linear-gradient(135deg, #030711, #06111f 48%, #02040a);
+  background: #030711;
 }
 
 .sky-shell--dawn {
-  background:
-    radial-gradient(circle at 18% 18%, rgba(255, 178, 116, 0.22), transparent 30rem),
-    radial-gradient(circle at 80% 6%, rgba(99, 183, 255, 0.22), transparent 30rem),
-    linear-gradient(140deg, #071323, #172139 52%, #2b1c2e);
+  --map-tint: rgba(255, 165, 114, 0.12);
+  --map-glow: rgba(255, 190, 128, 0.18);
 }
 
 .sky-shell--day {
-  background:
-    radial-gradient(circle at 72% 12%, rgba(255, 249, 204, 0.28), transparent 34rem),
-    linear-gradient(140deg, #10243b, #1b4160 52%, #526f83);
+  --map-tint: rgba(182, 226, 255, 0.08);
+  --map-glow: rgba(255, 249, 204, 0.14);
 }
 
 .sky-shell--dusk {
-  background:
-    radial-gradient(circle at 78% 14%, rgba(255, 139, 92, 0.24), transparent 32rem),
-    radial-gradient(circle at 18% 20%, rgba(118, 113, 255, 0.18), transparent 28rem),
-    linear-gradient(140deg, #060918, #171934 50%, #381d2c);
+  --map-tint: rgba(128, 98, 255, 0.12);
+  --map-glow: rgba(255, 139, 92, 0.16);
 }
 
 .map-frame {
@@ -78,14 +70,22 @@ button {
   overflow: hidden;
 }
 
-.map-canvas {
-  position: absolute;
-  inset: -4vh -4vw;
-  filter: saturate(0.82) brightness(0.58) contrast(1.24);
+.map-canvas-shell {
+  position: absolute !important;
+  inset: 0 !important;
+  filter: saturate(1.08) brightness(1.02) contrast(1.08);
 }
 
-.sky-shell--day .map-canvas {
-  filter: saturate(0.76) brightness(0.74) contrast(1.08);
+.map-canvas,
+.map-canvas.maplibregl-map,
+.map-canvas .maplibregl-canvas-container,
+.map-canvas .maplibregl-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.sky-shell--day .map-canvas-shell {
+  filter: saturate(1.02) brightness(1.08) contrast(1.02);
 }
 
 .maplibregl-ctrl-bottom-right {
@@ -101,23 +101,23 @@ button {
 
 .atmosphere--one {
   background:
-    radial-gradient(circle at 50% 48%, transparent 0 22%, rgba(2, 5, 12, 0.24) 60%),
-    linear-gradient(90deg, rgba(4, 9, 18, 0.32), transparent 30% 70%, rgba(4, 9, 18, 0.32));
+    radial-gradient(circle at 50% 48%, transparent 0 42%, rgba(2, 5, 12, 0.1) 78%),
+    linear-gradient(90deg, rgba(4, 9, 18, 0.16), transparent 24% 76%, rgba(4, 9, 18, 0.16));
   mix-blend-mode: multiply;
 }
 
 .atmosphere--two {
   background:
-    radial-gradient(circle at 28% 34%, var(--glow), transparent 18rem),
-    radial-gradient(circle at 76% 72%, rgba(186, 118, 255, 0.16), transparent 20rem);
-  opacity: 0.85;
+    radial-gradient(circle at 28% 34%, var(--map-glow, rgba(87, 213, 255, 0.18)), transparent 18rem),
+    linear-gradient(var(--map-tint, rgba(28, 125, 180, 0.06)), var(--map-tint, rgba(28, 125, 180, 0.06)));
+  opacity: 0.28;
   mix-blend-mode: screen;
 }
 
 .scanline {
   background-image: linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
   background-size: 100% 4px;
-  opacity: 0.18;
+  opacity: 0.08;
 }
 
 .hud,

@@ -14,6 +14,12 @@ npm run dev
 
 Open `http://localhost:3000` and allow browser location access.
 
+Create `.env.local` with a Mapbox public access token before starting the app:
+
+```bash
+MAPBOX_ACCESS_TOKEN="pk..."
+```
+
 ## Supply Chain Notes
 
 - Dependencies are pinned with exact versions in `package.json`.
@@ -26,9 +32,17 @@ Open `http://localhost:3000` and allow browser location access.
 
 ## Map Style
 
-The app defaults to OpenFreeMap's hosted style. To test another MapLibre style,
-set:
+The app defaults to Mapbox Light through a local style route. To test another
+MapLibre style, set:
 
 ```bash
 NEXT_PUBLIC_MAP_STYLE_URL="https://example.com/style.json"
 ```
+
+For local testing without browser geolocation, you can also set:
+
+```bash
+NEXT_PUBLIC_STARTING_CENTER_COORDS="-86.805059,33.499502"
+```
+
+Or append `?center=-86.805059,33.499502` to the app URL.
