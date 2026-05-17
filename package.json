@@ -1,0 +1,45 @@
+{
+  "name": "walltracker",
+  "version": "1.0.0",
+  "description": "Tracking animals, aircraft and more on a ceiling",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Michaelgathara/walltracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Michaelgathara/walltracker/issues"
+  },
+  "homepage": "https://github.com/Michaelgathara/walltracker#readme",
+  "dependencies": {
+    "maplibre-gl": "5.24.0",
+    "next": "16.2.6",
+    "react": "19.2.6",
+    "react-dom": "19.2.6",
+    "suncalc": "1.9.0",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@types/node": "25.6.2",
+    "@types/react": "19.2.14",
+    "@types/react-dom": "19.2.3",
+    "@types/suncalc": "1.9.2",
+    "eslint": "9.39.4",
+    "eslint-config-next": "16.2.6",
+    "typescript": "6.0.3"
+  },
+  "overrides": {
+    "postcss": "8.5.10"
+  }
+}
