@@ -1,12 +1,12 @@
 :root {
   color-scheme: dark;
-  --panel: rgba(5, 10, 20, 0.62);
-  --panel-strong: rgba(6, 14, 28, 0.82);
-  --line: rgba(219, 245, 255, 0.18);
-  --text: #f5fbff;
-  --muted: rgba(225, 244, 255, 0.68);
-  --quiet: rgba(225, 244, 255, 0.48);
-  --glow: rgba(87, 213, 255, 0.34);
+  --panel: rgba(6, 16, 18, 0.56);
+  --panel-strong: rgba(5, 18, 21, 0.84);
+  --line: rgba(123, 248, 206, 0.18);
+  --text: #f4fff9;
+  --muted: rgba(209, 255, 240, 0.74);
+  --quiet: rgba(175, 233, 216, 0.52);
+  --glow: rgba(76, 255, 188, 0.26);
 }
 
 * {
@@ -19,10 +19,10 @@ body {
   min-height: 100%;
   margin: 0;
   overflow: hidden;
-  background: #030711;
+  background: #020908;
   color: var(--text);
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "IBM Plex Sans", "Avenir Next", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 }
 
@@ -32,13 +32,13 @@ input {
 }
 
 button {
-  border: 1px solid rgba(202, 241, 255, 0.34);
+  border: 1px solid rgba(122, 248, 206, 0.4);
   border-radius: 999px;
   padding: 0.75rem 1rem;
-  background: rgba(122, 216, 255, 0.14);
+  background: rgba(88, 240, 186, 0.14);
   color: var(--text);
   cursor: pointer;
-  box-shadow: 0 0 32px rgba(99, 204, 255, 0.14);
+  box-shadow: 0 0 32px rgba(76, 255, 188, 0.12);
 }
 
 .sky-shell {
@@ -46,22 +46,24 @@ button {
   width: 100vw;
   height: 100vh;
   isolation: isolate;
-  background: #030711;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(18, 70, 86, 0.12), transparent 28rem),
+    linear-gradient(180deg, #02070c, #041019 48%, #02070a 76%, #010305);
 }
 
 .sky-shell--dawn {
-  --map-tint: rgba(255, 165, 114, 0.12);
-  --map-glow: rgba(255, 190, 128, 0.18);
+  --map-tint: rgba(255, 165, 109, 0.05);
+  --map-glow: rgba(104, 200, 255, 0.08);
 }
 
 .sky-shell--day {
-  --map-tint: rgba(182, 226, 255, 0.08);
-  --map-glow: rgba(255, 249, 204, 0.14);
+  --map-tint: rgba(78, 172, 225, 0.04);
+  --map-glow: rgba(133, 221, 255, 0.07);
 }
 
 .sky-shell--dusk {
-  --map-tint: rgba(128, 98, 255, 0.12);
-  --map-glow: rgba(255, 139, 92, 0.16);
+  --map-tint: rgba(92, 136, 224, 0.045);
+  --map-glow: rgba(89, 149, 255, 0.08);
 }
 
 .map-frame {
@@ -73,7 +75,7 @@ button {
 .map-canvas-shell {
   position: absolute !important;
   inset: 0 !important;
-  filter: saturate(1.08) brightness(1.02) contrast(1.08);
+  filter: saturate(1.02) brightness(0.95) contrast(1.08);
 }
 
 .map-canvas,
@@ -85,7 +87,7 @@ button {
 }
 
 .sky-shell--day .map-canvas-shell {
-  filter: saturate(1.02) brightness(1.08) contrast(1.02);
+  filter: saturate(0.96) brightness(0.97) contrast(1.05);
 }
 
 .maplibregl-ctrl-bottom-right {
@@ -101,33 +103,32 @@ button {
 
 .atmosphere--one {
   background:
-    radial-gradient(circle at 50% 48%, transparent 0 42%, rgba(2, 5, 12, 0.1) 78%),
-    linear-gradient(90deg, rgba(4, 9, 18, 0.16), transparent 24% 76%, rgba(4, 9, 18, 0.16));
-  mix-blend-mode: multiply;
+    radial-gradient(circle at 50% 48%, transparent 0 43%, rgba(2, 6, 11, 0.1) 82%),
+    linear-gradient(90deg, rgba(2, 9, 14, 0.18), transparent 22% 78%, rgba(2, 9, 14, 0.18));
+  mix-blend-mode: normal;
 }
 
 .atmosphere--two {
   background:
-    radial-gradient(circle at 28% 34%, var(--map-glow, rgba(87, 213, 255, 0.18)), transparent 18rem),
-    linear-gradient(var(--map-tint, rgba(28, 125, 180, 0.06)), var(--map-tint, rgba(28, 125, 180, 0.06)));
-  opacity: 0.28;
-  mix-blend-mode: screen;
+    radial-gradient(circle at 28% 34%, var(--map-glow, rgba(87, 213, 255, 0.12)), transparent 16rem),
+    linear-gradient(var(--map-tint, rgba(28, 125, 180, 0.04)), var(--map-tint, rgba(28, 125, 180, 0.04)));
+  opacity: 0.12;
+  mix-blend-mode: lighten;
 }
 
 .scanline {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-image: linear-gradient(rgba(176, 255, 227, 0.03) 1px, transparent 1px);
   background-size: 100% 4px;
-  opacity: 0.08;
+  opacity: 0.12;
 }
 
 .hud,
-.aircraft-list,
 .location-prompt {
   border: 1px solid var(--line);
   background: linear-gradient(145deg, var(--panel-strong), var(--panel));
   box-shadow:
-    0 24px 80px rgba(0, 0, 0, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    0 24px 80px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(193, 255, 234, 0.06);
   backdrop-filter: blur(22px);
 }
 
@@ -156,7 +157,7 @@ button {
 
 .eyebrow {
   margin: 0;
-  color: rgba(159, 232, 255, 0.84);
+  color: rgba(127, 255, 214, 0.88);
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.22em;
@@ -172,7 +173,6 @@ button {
 .control-group label,
 .range-row span,
 .hud--status span,
-.aircraft-card small,
 .quiet {
   color: var(--muted);
   font-size: 0.82rem;
@@ -187,7 +187,7 @@ button {
 
 input[type="range"] {
   width: 100%;
-  accent-color: #9fe8ff;
+  accent-color: #7fffd6;
 }
 
 .hud--status {
@@ -208,41 +208,6 @@ input[type="range"] {
 
 .hud--status strong {
   font-size: 1rem;
-}
-
-.aircraft-list {
-  position: absolute;
-  right: 1.25rem;
-  bottom: 1.25rem;
-  display: grid;
-  gap: 0.65rem;
-  width: min(21rem, calc(100vw - 2.5rem));
-  border-radius: 1.4rem;
-  padding: 1rem;
-}
-
-.aircraft-card {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 0.15rem 0.75rem;
-  padding-top: 0.65rem;
-  border-top: 1px solid rgba(219, 245, 255, 0.12);
-}
-
-.aircraft-card strong {
-  overflow: hidden;
-  font-size: 0.9rem;
-  letter-spacing: 0.08em;
-  text-overflow: ellipsis;
-}
-
-.aircraft-card span {
-  color: #9fe8ff;
-  font-size: 0.84rem;
-}
-
-.aircraft-card small {
-  grid-column: 1 / -1;
 }
 
 .location-prompt {
@@ -281,8 +246,7 @@ input[type="range"] {
   }
 
   .hud--primary,
-  .hud--status,
-  .aircraft-list {
+  .hud--status {
     position: relative;
     inset: auto;
     width: 100%;

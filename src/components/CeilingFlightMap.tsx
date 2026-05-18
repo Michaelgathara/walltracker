@@ -1,17 +1,17 @@
 "use client";
 
 import maplibregl, { type GeoJSONSource, type Map as MapLibreMap } from "maplibre-gl";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Aircraft, AircraftFeed } from "@/lib/aircraft/types";
 import type { Coordinates } from "@/lib/geo";
-import { distanceNauticalMiles } from "@/lib/geo";
 import { getSunState, type SunState } from "@/lib/sun";
 
-const defaultMapStyleUrl = "/api/mapbox/style?style=light-v11";
+const defaultMapStyleUrl = "/api/mapbox/style?style=dark-v11";
 const mapStyleUrl = process.env.NEXT_PUBLIC_MAP_STYLE_URL ?? defaultMapStyleUrl;
 
 const refreshIntervalMs = 10_000;
 const defaultRadiusNauticalMiles = 50;
+const aircraftIconId = "aircraft-marker";
 
 type LocationState =
   | { status: "idle" | "loading" | "denied" | "unsupported"; coordinates: null }
@@ -30,9 +30,12 @@ type FeedState =
 
 type AircraftFeatureProperties = {
   id: string;
-  label: string;
+  title: string;
+  detail: string;
   altitudeFeet: number;
   headingDegrees: number;
+  speedKnots: number;
+  distanceNauticalMiles: number;
 };
 
 export function CeilingFlightMap() {
@@ -200,7 +203,7 @@ export function CeilingFlightMap() {
       container: mapNodeRef.current,
       style: mapStyleUrl,
       center: [location.coordinates.longitude, location.coordinates.latitude],
-      zoom: zoomForRadius(defaultRadiusNauticalMiles),
+      zoom: initialZoomForRadius(defaultRadiusNauticalMiles),
       bearing: 0,
       pitch: 48,
       attributionControl: false,
@@ -221,6 +224,7 @@ export function CeilingFlightMap() {
 
     map.once("style.load", () => {
       map.resize();
+      registerAircraftIcon(map);
       addProjectionSources(map, location.coordinates, defaultRadiusNauticalMiles);
       addProjectionLayers(map);
       updateSource(map, "aircraft", buildAircraftFeatureCollection(aircraftRef.current));
@@ -272,22 +276,6 @@ export function CeilingFlightMap() {
     updateSource(mapRef.current, "aircraft", buildAircraftFeatureCollection(aircraft));
     updateSource(mapRef.current, "aircraft-trails", buildTrailFeatureCollection(aircraft));
   }, [aircraft]);
-
-  const sortedAircraft = useMemo(() => {
-    if (location.status !== "ready") {
-      return [];
-    }
-
-    return [...aircraft]
-      .map((trackedAircraft) => ({
-        ...trackedAircraft,
-        displayDistance:
-          trackedAircraft.distanceNauticalMiles ??
-          distanceNauticalMiles(location.coordinates, trackedAircraft),
-      }))
-      .sort((left, right) => left.displayDistance - right.displayDistance)
-      .slice(0, 5);
-  }, [aircraft, location]);
 
   const theme = sunState?.phase ?? "night";
 
@@ -370,28 +358,6 @@ export function CeilingFlightMap() {
           ) : null}
         </div>
       </section>
-
-      <aside className="aircraft-list" aria-label="Closest aircraft">
-        <p className="eyebrow">Closest signals</p>
-        {sortedAircraft.length > 0 ? (
-          sortedAircraft.map((trackedAircraft) => (
-            <article key={trackedAircraft.id} className="aircraft-card">
-              <strong>{trackedAircraft.callsign ?? trackedAircraft.id.toUpperCase()}</strong>
-              <span>{trackedAircraft.displayDistance.toFixed(1)} NM</span>
-              <small>
-                {formatAltitude(trackedAircraft.altitudeFeet)} /{" "}
-                {formatSpeed(trackedAircraft.groundSpeedKnots)}
-              </small>
-            </article>
-          ))
-      ) : (
-          <p className="quiet">
-            {location.status === "ready" && location.source === "fallback"
-              ? "No aircraft resolved yet for the fallback center."
-              : "No aircraft resolved yet."}
-          </p>
-        )}
-      </aside>
     </main>
   );
 }
@@ -523,52 +489,35 @@ function addProjectionLayers(map: MapLibreMap) {
     type: "circle",
     source: "aircraft",
     paint: {
-      "circle-color": "#a7f3ff",
+      "circle-color": "#8df4d2",
       "circle-radius": [
         "interpolate",
         ["linear"],
         ["get", "altitudeFeet"],
         0,
-        16,
+        12,
         45000,
-        30,
+        20,
       ],
-      "circle-opacity": 0.38,
-      "circle-blur": 1,
+      "circle-opacity": 0.2,
+      "circle-blur": 1.3,
     },
   });
 
   map.addLayer({
-    id: "aircraft-core",
-    type: "circle",
-    source: "aircraft",
-    paint: {
-      "circle-color": "#f6fbff",
-      "circle-radius": 7,
-      "circle-stroke-color": "#6ee7ff",
-      "circle-stroke-width": 2,
-      "circle-opacity": 0.98,
-    },
-  });
-
-  map.addLayer({
-    id: "aircraft-direction",
+    id: "aircraft-symbols",
     type: "symbol",
     source: "aircraft",
     layout: {
-      "text-field": ">",
-      "text-font": ["Open Sans Regular"],
-      "text-size": 22,
-      "text-rotate": ["get", "headingDegrees"],
-      "text-rotation-alignment": "map",
-      "text-allow-overlap": true,
-      "text-ignore-placement": true,
+      "icon-image": "aircraft-marker",
+      "icon-size": 0.7,
+      "icon-rotate": ["get", "headingDegrees"],
+      "icon-rotation-alignment": "map",
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
     },
     paint: {
-      "text-color": "#f8fdff",
-      "text-halo-color": "#063142",
-      "text-halo-width": 1.5,
-      "text-opacity": 0.98,
+      "icon-opacity": 0.98,
     },
   });
 
@@ -577,18 +526,21 @@ function addProjectionLayers(map: MapLibreMap) {
     type: "symbol",
     source: "aircraft",
     layout: {
-      "text-field": ["get", "label"],
+      "text-field": ["concat", ["get", "title"], "\n", ["get", "detail"]],
       "text-font": ["Open Sans Regular"],
-      "text-size": 12,
-      "text-offset": [0, 1.25],
+      "text-size": 11,
+      "text-line-height": 1.25,
+      "text-offset": [0, 1.8],
       "text-anchor": "top",
       "text-allow-overlap": true,
+      "text-ignore-placement": true,
+      "symbol-sort-key": ["*", -1, ["get", "distanceNauticalMiles"]],
     },
     paint: {
-      "text-color": "#e8fbff",
-      "text-halo-color": "#04111d",
-      "text-halo-width": 1.8,
-      "text-opacity": 0.96,
+      "text-color": "#f4fff9",
+      "text-halo-color": "rgba(4, 17, 29, 0.92)",
+      "text-halo-width": 2,
+      "text-opacity": 0.98,
     },
   });
 }
@@ -632,9 +584,12 @@ function buildAircraftFeatureCollection(aircraft: Aircraft[]) {
       },
       properties: {
         id: trackedAircraft.id,
-        label: trackedAircraft.callsign ?? trackedAircraft.id.toUpperCase(),
+        title: buildAircraftTitle(trackedAircraft),
+        detail: buildAircraftDetail(trackedAircraft),
         altitudeFeet: trackedAircraft.altitudeFeet ?? 0,
         headingDegrees: trackedAircraft.headingDegrees ?? 0,
+        speedKnots: trackedAircraft.groundSpeedKnots ?? 0,
+        distanceNauticalMiles: trackedAircraft.distanceNauticalMiles ?? 999,
       } satisfies AircraftFeatureProperties,
     })),
   };
@@ -693,19 +648,102 @@ function buildRadiusFeatureCollection(
 }
 
 function zoomForRadius(radiusNauticalMiles: number) {
-  if (radiusNauticalMiles <= 15) return 8;
-  if (radiusNauticalMiles <= 35) return 7;
-  if (radiusNauticalMiles <= 75) return 6;
-  if (radiusNauticalMiles <= 140) return 5;
-  return 4;
+  if (radiusNauticalMiles <= 15) return 10;
+  if (radiusNauticalMiles <= 35) return 9;
+  if (radiusNauticalMiles <= 75) return 8;
+  if (radiusNauticalMiles <= 140) return 7;
+  return 6;
 }
 
-function formatAltitude(altitudeFeet: number | null) {
-  return altitudeFeet === null ? "alt unknown" : `${altitudeFeet.toLocaleString()} ft`;
+function initialZoomForRadius(radiusNauticalMiles: number) {
+  return zoomForRadius(radiusNauticalMiles) + 1;
 }
 
-function formatSpeed(speedKnots: number | null) {
-  return speedKnots === null ? "speed unknown" : `${Math.round(speedKnots)} kt`;
+function buildAircraftTitle(aircraft: Aircraft) {
+  return aircraft.callsign?.trim() || aircraft.id.toUpperCase();
+}
+
+function buildAircraftDetail(aircraft: Aircraft) {
+  const parts = [
+    compactAltitude(aircraft.altitudeFeet),
+    compactSpeed(aircraft.groundSpeedKnots),
+    compactDistance(aircraft.distanceNauticalMiles),
+  ].filter(Boolean);
+
+  return parts.join("  ·  ");
+}
+
+function compactAltitude(altitudeFeet: number | null) {
+  if (altitudeFeet === null) {
+    return "ALT --";
+  }
+
+  if (altitudeFeet >= 18000) {
+    return `FL${Math.round(altitudeFeet / 100)}`;
+  }
+
+  return `${Math.round(altitudeFeet).toLocaleString()} FT`;
+}
+
+function compactSpeed(speedKnots: number | null) {
+  if (speedKnots === null) {
+    return null;
+  }
+
+  return `${Math.round(speedKnots * 1.15078)} MPH`;
+}
+
+function compactDistance(distanceNauticalMiles: number | null) {
+  return distanceNauticalMiles === null ? null : `${distanceNauticalMiles.toFixed(1)} NM`;
+}
+
+function registerAircraftIcon(map: MapLibreMap) {
+  if (map.hasImage(aircraftIconId)) {
+    return;
+  }
+
+  const iconSize = 88;
+  const canvas = document.createElement("canvas");
+  canvas.width = iconSize;
+  canvas.height = iconSize;
+
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return;
+  }
+
+  context.translate(iconSize / 2, iconSize / 2);
+  context.shadowColor = "rgba(109, 255, 215, 0.45)";
+  context.shadowBlur = 16;
+  context.fillStyle = "#ecfff7";
+  context.strokeStyle = "#7af3ce";
+  context.lineWidth = 2.5;
+
+  context.beginPath();
+  context.moveTo(0, -28);
+  context.lineTo(5, -8);
+  context.lineTo(23, -2);
+  context.lineTo(23, 6);
+  context.lineTo(5, 4);
+  context.lineTo(1, 26);
+  context.lineTo(8, 31);
+  context.lineTo(8, 37);
+  context.lineTo(0, 33);
+  context.lineTo(-8, 37);
+  context.lineTo(-8, 31);
+  context.lineTo(-1, 26);
+  context.lineTo(-5, 4);
+  context.lineTo(-23, 6);
+  context.lineTo(-23, -2);
+  context.lineTo(-5, -8);
+  context.closePath();
+  context.fill();
+  context.stroke();
+
+  map.addImage(aircraftIconId, context.getImageData(0, 0, iconSize, iconSize), {
+    pixelRatio: 2,
+  });
 }
 
 function getFallbackCoordinates() {
