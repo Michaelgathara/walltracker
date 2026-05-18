@@ -41,7 +41,8 @@ type AircraftFeatureProperties = {
 export function CeilingFlightMap() {
   const mapNodeRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapLibreMap | null>(null);
-  const aircraftRef = useRef<Aircraft[]>([]);
+  const animatedAircraftRef = useRef<Aircraft[]>([]);
+  const aircraftAnimationFrameRef = useRef<number | null>(null);
   const [location, setLocation] = useState<LocationState>({
     status: "idle",
     coordinates: null,
@@ -57,9 +58,16 @@ export function CeilingFlightMap() {
   });
   const [sunState, setSunState] = useState<SunState | null>(null);
 
-  useEffect(() => {
-    aircraftRef.current = aircraft;
-  }, [aircraft]);
+  const renderAircraft = useCallback((nextAircraft: Aircraft[]) => {
+    animatedAircraftRef.current = nextAircraft;
+
+    if (!mapRef.current) {
+      return;
+    }
+
+    updateSource(mapRef.current, "aircraft", buildAircraftFeatureCollection(nextAircraft));
+    updateSource(mapRef.current, "aircraft-trails", buildTrailFeatureCollection(nextAircraft));
+  }, []);
 
   const requestLocation = useCallback(() => {
     const fallbackCoordinates = getFallbackCoordinates();
@@ -227,12 +235,7 @@ export function CeilingFlightMap() {
       registerAircraftIcon(map);
       addProjectionSources(map, location.coordinates, defaultRadiusNauticalMiles);
       addProjectionLayers(map);
-      updateSource(map, "aircraft", buildAircraftFeatureCollection(aircraftRef.current));
-      updateSource(
-        map,
-        "aircraft-trails",
-        buildTrailFeatureCollection(aircraftRef.current),
-      );
+      renderAircraft(animatedAircraftRef.current);
     });
 
     mapRef.current = map;
@@ -242,7 +245,7 @@ export function CeilingFlightMap() {
       map.remove();
       mapRef.current = null;
     };
-  }, [location]);
+  }, [location, renderAircraft]);
 
   useEffect(() => {
     if (!mapRef.current || location.status !== "ready") {
@@ -269,13 +272,63 @@ export function CeilingFlightMap() {
   }, [location, mapRotationDegrees, radiusNauticalMiles]);
 
   useEffect(() => {
+    if (aircraftAnimationFrameRef.current) {
+      window.cancelAnimationFrame(aircraftAnimationFrameRef.current);
+      aircraftAnimationFrameRef.current = null;
+    }
+
+    const currentAircraft =
+      animatedAircraftRef.current.length > 0 ? animatedAircraftRef.current : aircraft;
+
+    if (aircraft.length === 0 || currentAircraft.length === 0) {
+      renderAircraft(aircraft);
+      return;
+    }
+
+    const animationDurationMs = Math.max(2_500, refreshIntervalMs - 1_000);
+    const startTime = performance.now();
+
+    const animate = (now: number) => {
+      const progress = Math.min((now - startTime) / animationDurationMs, 1);
+      const smoothedProgress = easeInOutCubic(progress);
+
+      renderAircraft(
+        interpolateAircraftCollection(currentAircraft, aircraft, smoothedProgress),
+      );
+
+      if (progress < 1) {
+        aircraftAnimationFrameRef.current = window.requestAnimationFrame(animate);
+        return;
+      }
+
+      aircraftAnimationFrameRef.current = null;
+    };
+
+    aircraftAnimationFrameRef.current = window.requestAnimationFrame(animate);
+
+    return () => {
+      if (aircraftAnimationFrameRef.current) {
+        window.cancelAnimationFrame(aircraftAnimationFrameRef.current);
+        aircraftAnimationFrameRef.current = null;
+      }
+    };
+  }, [aircraft, renderAircraft]);
+
+  useEffect(() => {
+    return () => {
+      if (aircraftAnimationFrameRef.current) {
+        window.cancelAnimationFrame(aircraftAnimationFrameRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (!mapRef.current) {
       return;
     }
 
-    updateSource(mapRef.current, "aircraft", buildAircraftFeatureCollection(aircraft));
-    updateSource(mapRef.current, "aircraft-trails", buildTrailFeatureCollection(aircraft));
-  }, [aircraft]);
+    renderAircraft(animatedAircraftRef.current);
+  }, [renderAircraft]);
 
   const theme = sunState?.phase ?? "night";
 
@@ -306,55 +359,59 @@ export function CeilingFlightMap() {
           around you.
         </p>
 
-        <div className="control-group">
-          <label htmlFor="radius">Radius</label>
-          <div className="range-row">
-            <input
-              id="radius"
-              type="range"
-              min="5"
-              max="250"
-              step="5"
-              value={radiusNauticalMiles}
-              onChange={(event) => setRadiusNauticalMiles(Number(event.target.value))}
-            />
-            <span>{radiusNauticalMiles} NM</span>
+        <div className="hud-section">
+          <div className="control-group">
+            <label htmlFor="radius">Range</label>
+            <div className="range-row">
+              <input
+                id="radius"
+                type="range"
+                min="5"
+                max="250"
+                step="5"
+                value={radiusNauticalMiles}
+                onChange={(event) => setRadiusNauticalMiles(Number(event.target.value))}
+              />
+              <span className="range-value">{radiusNauticalMiles} NM</span>
+            </div>
           </div>
-        </div>
 
-        <div className="control-group">
-          <label htmlFor="rotation">Map orientation</label>
-          <div className="range-row">
-            <input
-              id="rotation"
-              type="range"
-              min="-180"
-              max="180"
-              step="5"
-              value={mapRotationDegrees}
-              onChange={(event) => setMapRotationDegrees(Number(event.target.value))}
-            />
-            <span>{mapRotationDegrees} deg</span>
+          <div className="control-group">
+            <label htmlFor="rotation">Bearing</label>
+            <div className="range-row">
+              <input
+                id="rotation"
+                type="range"
+                min="-180"
+                max="180"
+                step="5"
+                value={mapRotationDegrees}
+                onChange={(event) => setMapRotationDegrees(Number(event.target.value))}
+              />
+              <span className="range-value">{mapRotationDegrees} deg</span>
+            </div>
           </div>
         </div>
       </section>
 
       <section className="hud hud--status" aria-label="Sky status">
-        <div>
+        <div className="status-block">
           <p className="eyebrow">Light</p>
           <strong>{sunState?.label ?? "Locating"}</strong>
           {sunState ? (
-            <span>
+            <span className="status-meta">
               Sun {sunState.altitudeDegrees.toFixed(1)} deg /
               azimuth {sunState.azimuthDegrees.toFixed(0)} deg
             </span>
           ) : null}
         </div>
-        <div>
+        <div className="status-block">
           <p className="eyebrow">Feed</p>
           <strong>{feedState.message}</strong>
           {feedState.status === "ready" ? (
-            <span>Updated {new Date(feedState.updatedAt).toLocaleTimeString()}</span>
+            <span className="status-meta">
+              Updated {new Date(feedState.updatedAt).toLocaleTimeString()}
+            </span>
           ) : null}
         </div>
       </section>
@@ -399,6 +456,118 @@ function mergeAircraftTracks(previous: Aircraft[], next: Aircraft[]) {
 
     return { ...aircraft, track };
   });
+}
+
+function interpolateAircraftCollection(
+  currentAircraft: Aircraft[],
+  targetAircraft: Aircraft[],
+  progress: number,
+) {
+  const currentAircraftById = new Map(
+    currentAircraft.map((trackedAircraft) => [trackedAircraft.id, trackedAircraft]),
+  );
+
+  return targetAircraft.map((trackedAircraft) => {
+    const currentSnapshot = currentAircraftById.get(trackedAircraft.id);
+
+    if (!currentSnapshot) {
+      return trackedAircraft;
+    }
+
+    const latitude = interpolateNumber(
+      currentSnapshot.latitude,
+      trackedAircraft.latitude,
+      progress,
+    );
+    const longitude = interpolateNumber(
+      currentSnapshot.longitude,
+      trackedAircraft.longitude,
+      progress,
+    );
+
+    return {
+      ...trackedAircraft,
+      latitude,
+      longitude,
+      altitudeFeet: interpolateOptionalNumber(
+        currentSnapshot.altitudeFeet,
+        trackedAircraft.altitudeFeet,
+        progress,
+      ),
+      groundSpeedKnots: interpolateOptionalNumber(
+        currentSnapshot.groundSpeedKnots,
+        trackedAircraft.groundSpeedKnots,
+        progress,
+      ),
+      headingDegrees: interpolateHeading(
+        currentSnapshot.headingDegrees,
+        trackedAircraft.headingDegrees,
+        progress,
+      ),
+      distanceNauticalMiles: interpolateOptionalNumber(
+        currentSnapshot.distanceNauticalMiles,
+        trackedAircraft.distanceNauticalMiles,
+        progress,
+      ),
+      track: buildAnimatedTrack(trackedAircraft, latitude, longitude),
+    };
+  });
+}
+
+function buildAnimatedTrack(
+  aircraft: Aircraft,
+  latitude: number,
+  longitude: number,
+) {
+  if (aircraft.track.length === 0) {
+    return aircraft.track;
+  }
+
+  return [
+    {
+      latitude,
+      longitude,
+      seenAt: aircraft.track[0]?.seenAt ?? new Date().toISOString(),
+    },
+    ...aircraft.track.slice(1),
+  ];
+}
+
+function interpolateNumber(start: number, end: number, progress: number) {
+  return start + (end - start) * progress;
+}
+
+function interpolateOptionalNumber(
+  start: number | null,
+  end: number | null,
+  progress: number,
+) {
+  if (start === null || end === null) {
+    return end;
+  }
+
+  return interpolateNumber(start, end, progress);
+}
+
+function interpolateHeading(
+  start: number | null,
+  end: number | null,
+  progress: number,
+) {
+  if (start === null || end === null) {
+    return end;
+  }
+
+  const delta = ((((end - start) % 360) + 540) % 360) - 180;
+  return (start + delta * progress + 360) % 360;
+}
+
+function easeInOutCubic(progress: number) {
+  if (progress < 0.5) {
+    return 4 * progress * progress * progress;
+  }
+
+  return 1 - Math.pow(-2 * progress + 2, 3) / 2;
 }
 
 function addProjectionSources(
