@@ -185,6 +185,55 @@ button:active {
   text-transform: uppercase;
 }
 
+.mode-switch {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 0.35rem;
+  width: fit-content;
+  margin: 0 0 1rem;
+  padding: 0.22rem;
+  border: 1px solid rgba(160, 186, 201, 0.16);
+  border-radius: 999px;
+  background: rgba(10, 16, 22, 0.82);
+}
+
+.mode-pill {
+  min-width: 6.4rem;
+  padding: 0.52rem 0.9rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--quiet);
+  box-shadow: none;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.mode-pill:hover {
+  background: rgba(184, 223, 244, 0.08);
+  border-color: transparent;
+}
+
+.mode-pill--active {
+  background: rgba(184, 223, 244, 0.14);
+  color: var(--text);
+}
+
+.mode-pill--disabled {
+  position: relative;
+  opacity: 0.68;
+  cursor: default;
+}
+
+.mode-pill--disabled::after {
+  content: "Soon";
+  margin-left: 0.45rem;
+  color: var(--quiet);
+  font-size: 0.66rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
 .hud-section {
   display: grid;
   gap: 0.8rem;
