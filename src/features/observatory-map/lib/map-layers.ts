@@ -1,5 +1,7 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 
+import { boatIconId } from "../constants";
+
 export function addProjectionLayers(map: MapLibreMap) {
   map.addLayer({
     id: "receiver-radius-fill",
@@ -178,6 +180,58 @@ export function addProjectionLayers(map: MapLibreMap) {
     paint: {
       "text-color": "#f7f0e2",
       "text-halo-color": "rgba(24, 18, 9, 0.92)",
+      "text-halo-width": 2,
+      "text-opacity": 0.94,
+    },
+  });
+
+  map.addLayer({
+    id: "boat-halo",
+    type: "circle",
+    source: "boats",
+    paint: {
+      "circle-color": "#91d7ff",
+      "circle-radius": 11,
+      "circle-opacity": 0.16,
+      "circle-blur": 1.1,
+    },
+  });
+
+  map.addLayer({
+    id: "boat-symbols",
+    type: "symbol",
+    source: "boats",
+    layout: {
+      "icon-image": boatIconId,
+      "icon-size": 0.7,
+      "icon-rotate": ["get", "headingDegrees"],
+      "icon-rotation-alignment": "map",
+      "icon-allow-overlap": true,
+      "icon-ignore-placement": true,
+    },
+    paint: {
+      "icon-opacity": 0.96,
+    },
+  });
+
+  map.addLayer({
+    id: "boat-labels",
+    type: "symbol",
+    source: "boats",
+    layout: {
+      "text-field": ["concat", ["get", "title"], "\n", ["get", "detail"]],
+      "text-font": ["Open Sans Regular"],
+      "text-size": 10,
+      "text-line-height": 1.2,
+      "text-offset": [0, 1.55],
+      "text-anchor": "top",
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
+      "symbol-sort-key": ["*", -1, ["get", "distanceNauticalMiles"]],
+    },
+    paint: {
+      "text-color": "#e9f6ff",
+      "text-halo-color": "rgba(8, 20, 31, 0.92)",
       "text-halo-width": 2,
       "text-opacity": 0.94,
     },

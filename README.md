@@ -18,7 +18,11 @@ Create `.env.local` with a Mapbox public access token before starting the app:
 
 ```bash
 MAPBOX_ACCESS_TOKEN="pk..."
+AISSTREAM_API_KEY="your-aisstream-api-key"
 ```
+
+`AISSTREAM_API_KEY` is optional, but required to enable nearby boat tracking
+through an `AISStream` snapshot collected by the backend route.
 
 ## Supply Chain Notes
 

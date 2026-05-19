@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { defaultRadiusNauticalMiles } from "../constants";
 import { useAircraftFeed } from "../hooks/use-aircraft-feed";
 import { useAnimalFeed } from "../hooks/use-animal-feed";
+import { useBoatFeed } from "../hooks/use-boat-feed";
 import { useBrowserLocation } from "../hooks/use-browser-location";
 import { useSunState } from "../hooks/use-sun-state";
 import { buildCombinedFeedState } from "../lib/feed-state";
@@ -28,6 +29,7 @@ export function CeilingFlightMap() {
     location,
     radiusNauticalMiles,
   );
+  const { boats, boatFeedState } = useBoatFeed(location, radiusNauticalMiles);
   const sunState = useSunState(location);
 
   const toggleLayer = useCallback((layer: DisplayLayer) => {
@@ -37,10 +39,6 @@ export function CeilingFlightMap() {
     }));
   }, []);
 
-  const boatFeedState: FeedState = {
-    status: "idle",
-    message: "Boat feeds coming soon.",
-  };
   const selectedFeeds = [
     layers.aircraft ? feedState : null,
     layers.animals ? animalFeedState : null,
@@ -56,6 +54,7 @@ export function CeilingFlightMap() {
           <ObservatoryMapCanvas
             aircraft={aircraft}
             animalObservations={animalObservations}
+            boats={boats}
             layers={layers}
             location={location}
             mapRotationDegrees={mapRotationDegrees}

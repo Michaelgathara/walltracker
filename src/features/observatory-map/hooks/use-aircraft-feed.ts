@@ -13,6 +13,8 @@ export function useAircraftFeed(
   const [aircraft, setAircraft] = useState<Aircraft[]>([]);
   const [feedState, setFeedState] = useState<FeedState>({
     status: "idle",
+    label: "Aircraft",
+    count: 0,
     message: "Waiting for your sky position.",
   });
 
@@ -22,7 +24,12 @@ export function useAircraftFeed(
         return;
       }
 
-      setFeedState({ status: "loading", message: "Listening for aircraft..." });
+      setFeedState({
+        status: "loading",
+        label: "Aircraft",
+        count: 0,
+        message: "Listening for aircraft...",
+      });
 
       const response = await fetch(
         `/api/aircraft?lat=${location.coordinates.latitude}&lon=${location.coordinates.longitude}&radius=${radiusNauticalMiles}`,
@@ -40,6 +47,8 @@ export function useAircraftFeed(
       );
       setFeedState({
         status: "ready",
+        label: "Aircraft",
+        count: feed.aircraft.length,
         message: `${feed.aircraft.length} aircraft within ${radiusNauticalMiles} NM`,
         updatedAt: feed.fetchedAt,
       });
@@ -58,6 +67,8 @@ export function useAircraftFeed(
         if (!controller.signal.aborted) {
           setFeedState({
             status: "error",
+            label: "Aircraft",
+            count: 0,
             message: "The aircraft feed is quiet or unavailable.",
           });
         }

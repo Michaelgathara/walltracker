@@ -4,11 +4,15 @@ export function buildCombinedFeedState(selectedFeeds: FeedState[]): FeedState {
   if (selectedFeeds.length === 0) {
     return {
       status: "idle",
+      label: "Feed",
+      count: 0,
       message: "No layers selected.",
     };
   }
 
-  const message = selectedFeeds.map((feed) => feed.message).join(" + ");
+  const message = selectedFeeds
+    .map((feed) => `${feed.count} ${feed.label}`)
+    .join("\n");
   const readyFeeds = selectedFeeds.filter(
     (feed): feed is Extract<FeedState, { status: "ready" }> => feed.status === "ready",
   );
@@ -17,6 +21,8 @@ export function buildCombinedFeedState(selectedFeeds: FeedState[]): FeedState {
   if (errorFeed) {
     return {
       status: "error",
+      label: "Feed",
+      count: selectedFeeds.reduce((sum, feed) => sum + feed.count, 0),
       message,
     };
   }
@@ -30,6 +36,8 @@ export function buildCombinedFeedState(selectedFeeds: FeedState[]): FeedState {
 
     return {
       status: "ready",
+      label: "Feed",
+      count: selectedFeeds.reduce((sum, feed) => sum + feed.count, 0),
       message,
       updatedAt: freshestFeed.updatedAt,
     };
@@ -38,12 +46,16 @@ export function buildCombinedFeedState(selectedFeeds: FeedState[]): FeedState {
   if (selectedFeeds.some((feed) => feed.status === "loading")) {
     return {
       status: "loading",
+      label: "Feed",
+      count: selectedFeeds.reduce((sum, feed) => sum + feed.count, 0),
       message,
     };
   }
 
   return {
     status: "idle",
+    label: "Feed",
+    count: selectedFeeds.reduce((sum, feed) => sum + feed.count, 0),
     message,
   };
 }

@@ -1,4 +1,4 @@
-import type { Aircraft, AnimalObservation } from "@/types";
+import type { Aircraft, AnimalObservation, Boat } from "@/types";
 
 export function buildAnimalTitle(observation: AnimalObservation) {
   return observation.commonName ?? observation.scientificName ?? "Wildlife observation";
@@ -18,6 +18,20 @@ export function buildAnimalDetail(observation: AnimalObservation) {
 
 export function buildAircraftTitle(aircraft: Aircraft) {
   return aircraft.callsign?.trim() || aircraft.id.toUpperCase();
+}
+
+export function buildBoatTitle(boat: Boat) {
+  return boat.name?.trim() || boat.callsign?.trim() || `MMSI ${boat.mmsi}`;
+}
+
+export function buildBoatDetail(boat: Boat) {
+  const parts = [
+    compactBoatType(boat.vesselTypeCode),
+    compactSpeed(boat.speedKnots),
+    compactDistance(boat.distanceNauticalMiles),
+  ].filter(Boolean);
+
+  return parts.join("  ·  ");
 }
 
 export function buildAircraftDetail(aircraft: Aircraft) {
@@ -52,4 +66,32 @@ function compactSpeed(speedKnots: number | null) {
 
 function compactDistance(distanceNauticalMiles: number | null) {
   return distanceNauticalMiles === null ? null : `${distanceNauticalMiles.toFixed(1)} NM`;
+}
+
+function compactBoatType(vesselTypeCode: number | null) {
+  if (vesselTypeCode === null) {
+    return "Vessel";
+  }
+
+  if (vesselTypeCode >= 80 && vesselTypeCode < 90) {
+    return "Tanker";
+  }
+
+  if (vesselTypeCode >= 70 && vesselTypeCode < 80) {
+    return "Cargo";
+  }
+
+  if (vesselTypeCode >= 60 && vesselTypeCode < 70) {
+    return "Passenger";
+  }
+
+  if (vesselTypeCode >= 30 && vesselTypeCode < 40) {
+    return "Fishing";
+  }
+
+  if (vesselTypeCode >= 50 && vesselTypeCode < 60) {
+    return "Service";
+  }
+
+  return `Type ${vesselTypeCode}`;
 }

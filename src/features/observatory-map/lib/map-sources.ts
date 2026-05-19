@@ -1,11 +1,17 @@
 import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
-import type { Aircraft, AnimalObservation, Coordinates } from "@/types";
-import type { AircraftFeatureProperties, AnimalFeatureProperties } from "../types";
+import type { Aircraft, AnimalObservation, Boat, Coordinates } from "@/types";
+import type {
+  AircraftFeatureProperties,
+  AnimalFeatureProperties,
+  BoatFeatureProperties,
+} from "../types";
 import {
   buildAircraftDetail,
   buildAircraftTitle,
   buildAnimalDetail,
   buildAnimalTitle,
+  buildBoatDetail,
+  buildBoatTitle,
 } from "./formatters";
 
 export function addProjectionSources(
@@ -28,6 +34,10 @@ export function addProjectionSources(
   map.addSource("animal-observations", {
     type: "geojson",
     data: buildAnimalFeatureCollection([]),
+  });
+  map.addSource("boats", {
+    type: "geojson",
+    data: buildBoatFeatureCollection([]),
   });
   map.addSource("receiver-radius", {
     type: "geojson",
@@ -100,6 +110,27 @@ export function buildAnimalFeatureCollection(observations: AnimalObservation[]) 
         detail: buildAnimalDetail(observation),
         iconicTaxon: observation.iconicTaxon ?? "Animalia",
       } satisfies AnimalFeatureProperties,
+    })),
+  };
+}
+
+export function buildBoatFeatureCollection(boats: Boat[]) {
+  return {
+    type: "FeatureCollection" as const,
+    features: boats.map((boat) => ({
+      type: "Feature" as const,
+      geometry: {
+        type: "Point" as const,
+        coordinates: [boat.longitude, boat.latitude],
+      },
+      properties: {
+        id: boat.id,
+        title: buildBoatTitle(boat),
+        detail: buildBoatDetail(boat),
+        headingDegrees: boat.headingDegrees ?? boat.courseDegrees ?? 0,
+        vesselTypeCode: boat.vesselTypeCode ?? 0,
+        distanceNauticalMiles: boat.distanceNauticalMiles ?? 999,
+      } satisfies BoatFeatureProperties,
     })),
   };
 }

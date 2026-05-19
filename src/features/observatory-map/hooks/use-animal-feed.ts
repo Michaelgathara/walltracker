@@ -12,6 +12,8 @@ export function useAnimalFeed(
   const [animalObservations, setAnimalObservations] = useState<AnimalObservation[]>([]);
   const [animalFeedState, setAnimalFeedState] = useState<FeedState>({
     status: "idle",
+    label: "Animals",
+    count: 0,
     message: "Waiting for nearby animal observations.",
   });
 
@@ -23,6 +25,8 @@ export function useAnimalFeed(
 
       setAnimalFeedState({
         status: "loading",
+        label: "Animals",
+        count: 0,
         message: "Listening for nearby wildlife...",
       });
 
@@ -39,6 +43,8 @@ export function useAnimalFeed(
       setAnimalObservations(feed.observations);
       setAnimalFeedState({
         status: "ready",
+        label: "Animals",
+        count: feed.observations.length,
         message: `${feed.observations.length} nearby animal observations`,
         updatedAt: feed.fetchedAt,
       });
@@ -57,6 +63,8 @@ export function useAnimalFeed(
         if (!controller.signal.aborted) {
           setAnimalFeedState({
             status: "error",
+            label: "Animals",
+            count: 0,
             message: "Nearby animal observations are unavailable.",
           });
         }

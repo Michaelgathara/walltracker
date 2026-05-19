@@ -14,7 +14,7 @@ type ObservatoryHudProps = {
 
 const pageTitle = "Sky traffic and wildlife";
 const lede =
-  "A combined observatory for nearby aircraft and animal activity around you, with room for marine traffic next.";
+  "A combined observatory for nearby aircraft, wildlife, and vessel activity around you.";
 
 export function ObservatoryHud({
   layers,
@@ -50,8 +50,8 @@ export function ObservatoryHud({
           </button>
           <button
             type="button"
-            className={`mode-pill${layers.boats ? " mode-pill--active" : ""} mode-pill--disabled`}
-            disabled
+            className={`mode-pill${layers.boats ? " mode-pill--active" : ""}`}
+            onClick={() => onLayerToggle("boats")}
           >
             Boats
           </button>
@@ -105,7 +105,7 @@ export function ObservatoryHud({
         </div>
         <div className="status-block">
           <p className="eyebrow">Feed</p>
-          <strong>{statusFeed.message}</strong>
+          <strong style={{ whiteSpace: "pre-line" }}>{statusFeed.message}</strong>
           {statusFeed.status === "ready" ? (
             <span className="status-meta">
               Updated {new Date(statusFeed.updatedAt).toLocaleTimeString()}

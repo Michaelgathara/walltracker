@@ -13,11 +13,17 @@ export type LocationState =
       source: "geolocation" | "fallback";
     };
 
+type FeedStateBase = {
+  label: string;
+  count: number;
+  message: string;
+};
+
 export type FeedState =
-  | { status: "idle"; message: string }
-  | { status: "loading"; message: string }
-  | { status: "ready"; message: string; updatedAt: string }
-  | { status: "error"; message: string };
+  | ({ status: "idle" } & FeedStateBase)
+  | ({ status: "loading" } & FeedStateBase)
+  | ({ status: "ready"; updatedAt: string } & FeedStateBase)
+  | ({ status: "error" } & FeedStateBase);
 
 export type AircraftFeatureProperties = {
   id: string;
@@ -34,4 +40,13 @@ export type AnimalFeatureProperties = {
   title: string;
   detail: string;
   iconicTaxon: string;
+};
+
+export type BoatFeatureProperties = {
+  id: string;
+  title: string;
+  detail: string;
+  headingDegrees: number;
+  vesselTypeCode: number;
+  distanceNauticalMiles: number;
 };
