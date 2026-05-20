@@ -105,7 +105,7 @@ export function ObservatoryMapCanvas({
 
     const resizeFrame = window.requestAnimationFrame(() => map.resize());
 
-    map.on("error", (event) => {
+    map.on("error", (event: { error?: Error }) => {
       if (event.error) {
         console.error("MapLibre error", event.error);
       }

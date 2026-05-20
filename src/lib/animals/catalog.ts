@@ -1,4 +1,4 @@
-import type { AnimalTrackerFeed } from "./types";
+import type { AnimalTrackerFeed } from "@/types";
 
 const trackers = [
   {

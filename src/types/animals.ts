@@ -17,3 +17,19 @@ export type AnimalObservationFeed = {
   fetchedAt: string;
   source: "iNaturalist";
 };
+
+export type AnimalTracker = {
+  id: string;
+  name: string;
+  focus: string;
+  coverage: string;
+  summary: string;
+  access: string;
+  url: string;
+};
+
+export type AnimalTrackerFeed = {
+  trackers: AnimalTracker[];
+  fetchedAt: string;
+  source: string;
+};
