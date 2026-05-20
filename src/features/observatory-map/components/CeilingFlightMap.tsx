@@ -21,7 +21,7 @@ export function CeilingFlightMap() {
   const [layers, setLayers] = useState<LayerState>({
     aircraft: true,
     animals: true,
-    boats: false,
+    boats: true,
   });
   const [mapRotationDegrees, setMapRotationDegrees] = useState(0);
   const { aircraft, feedState } = useAircraftFeed(location, radiusNauticalMiles);

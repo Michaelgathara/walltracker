@@ -171,6 +171,8 @@ export async function fetchNearbyBoatsFromAISStream({
       radiusNauticalMiles,
     },
     source: "AISStream",
+    freshness: boats.length > 0 ? "live" : "empty",
+    cacheAgeSeconds: null,
   };
 }
 

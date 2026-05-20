@@ -26,4 +26,6 @@ export type BoatFeed = {
     radiusNauticalMiles: number;
   };
   source: "AISStream";
+  freshness: "live" | "cached" | "empty";
+  cacheAgeSeconds: number | null;
 };

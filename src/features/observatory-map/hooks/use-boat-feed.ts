@@ -11,7 +11,7 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
     status: "idle",
     label: "Boats",
     count: 0,
-    message: "Boat tracking is off.",
+    message: "Waiting for your location.",
   });
 
   const fetchBoats = useCallback(
@@ -53,10 +53,7 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
         status: "ready",
         label: "Boats",
         count: feed.boats.length,
-        message:
-          feed.boats.length > 0
-            ? `${feed.boats.length} vessels within ${radiusNauticalMiles} NM`
-            : "No live AIS vessel updates were received for this area.",
+        message: buildBoatStatusMessage(feed, radiusNauticalMiles),
         updatedAt: feed.fetchedAt,
       });
     },
@@ -93,4 +90,17 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
   }, [fetchBoats, location]);
 
   return { boats, boatFeedState };
+}
+
+function buildBoatStatusMessage(feed: BoatFeed, radiusNauticalMiles: number) {
+  if (feed.freshness === "cached") {
+    const ageMinutes = Math.max(1, Math.round((feed.cacheAgeSeconds ?? 0) / 60));
+    return `${feed.boats.length} recently seen vessels within ${radiusNauticalMiles} NM (${ageMinutes} min cache)`;
+  }
+
+  if (feed.freshness === "live" && feed.boats.length > 0) {
+    return `${feed.boats.length} live vessels within ${radiusNauticalMiles} NM`;
+  }
+
+  return "No live AIS vessel updates were received for this area.";
 }
