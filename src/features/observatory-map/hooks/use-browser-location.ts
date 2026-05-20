@@ -12,7 +12,19 @@ export function useBrowserLocation() {
   });
 
   const requestLocation = useCallback(() => {
-    const fallbackCoordinates = getFallbackCoordinates();
+    const urlCoordinates = getUrlCoordinates();
+    const fallbackCoordinates =
+      urlCoordinates ?? parseCoordinates(process.env.NEXT_PUBLIC_STARTING_CENTER_COORDS);
+
+    if (urlCoordinates) {
+      setLocation({
+        status: "ready",
+        coordinates: urlCoordinates,
+        accuracyMeters: null,
+        source: "fallback",
+      });
+      return;
+    }
 
     if (!navigator.geolocation) {
       if (fallbackCoordinates) {
@@ -77,10 +89,17 @@ function getFallbackCoordinates(): Coordinates | null {
     return null;
   }
 
-  const params = new URLSearchParams(window.location.search);
-
   return (
-    parseCoordinates(params.get("center")) ??
+    getUrlCoordinates() ??
     parseCoordinates(process.env.NEXT_PUBLIC_STARTING_CENTER_COORDS)
   );
+}
+
+function getUrlCoordinates(): Coordinates | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  return parseCoordinates(params.get("center"));
 }

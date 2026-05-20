@@ -5,7 +5,6 @@ import { useCallback, useEffect, useRef } from "react";
 import type { Aircraft, AnimalObservation, Boat } from "@/types";
 import {
   aircraftRefreshIntervalMs,
-  defaultRadiusNauticalMiles,
   mapStyleUrl,
 } from "../constants";
 import {
@@ -24,7 +23,11 @@ import {
   buildTrailFeatureCollection,
   updateSource,
 } from "../lib/map-sources";
-import { initialZoomForRadius, zoomForRadius } from "../lib/map-viewport";
+import {
+  initialZoomForRadius,
+  pitchForRadius,
+  zoomForRadius,
+} from "../lib/map-viewport";
 import { registerBoatIcon } from "../lib/map-icons";
 import type { LayerState, LocationState } from "../types";
 
@@ -92,9 +95,9 @@ export function ObservatoryMapCanvas({
       container: mapNodeRef.current,
       style: mapStyleUrl,
       center: [location.coordinates.longitude, location.coordinates.latitude],
-      zoom: initialZoomForRadius(defaultRadiusNauticalMiles),
+      zoom: initialZoomForRadius(radiusNauticalMiles),
       bearing: 0,
-      pitch: 48,
+      pitch: pitchForRadius(radiusNauticalMiles),
       attributionControl: false,
     });
 
@@ -115,7 +118,7 @@ export function ObservatoryMapCanvas({
       map.resize();
       registerAircraftIcon(map);
       registerBoatIcon(map);
-      addProjectionSources(map, location.coordinates, defaultRadiusNauticalMiles);
+      addProjectionSources(map, location.coordinates, radiusNauticalMiles);
       addProjectionLayers(map);
       renderAircraft(animatedAircraftRef.current);
       renderAnimals(layers.animals ? animalObservations : []);
@@ -129,7 +132,7 @@ export function ObservatoryMapCanvas({
       map.remove();
       mapRef.current = null;
     };
-  }, [location, renderAircraft, renderAnimals, renderBoats]);
+  }, [location, radiusNauticalMiles, renderAircraft, renderAnimals, renderBoats]);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -140,6 +143,7 @@ export function ObservatoryMapCanvas({
       center: [location.coordinates.longitude, location.coordinates.latitude],
       zoom: zoomForRadius(radiusNauticalMiles),
       bearing: mapRotationDegrees,
+      pitch: pitchForRadius(radiusNauticalMiles),
       duration: 900,
     });
 

@@ -53,7 +53,10 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
         status: "ready",
         label: "Boats",
         count: feed.boats.length,
-        message: `${feed.boats.length} vessels within ${radiusNauticalMiles} NM`,
+        message:
+          feed.boats.length > 0
+            ? `${feed.boats.length} vessels within ${radiusNauticalMiles} NM`
+            : "No live AIS vessel updates were received for this area.",
         updatedAt: feed.fetchedAt,
       });
     },

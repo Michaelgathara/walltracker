@@ -3,6 +3,8 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { boatIconId } from "../constants";
 
 export function addProjectionLayers(map: MapLibreMap) {
+  addContextualBuildingsLayer(map);
+
   map.addLayer({
     id: "receiver-radius-fill",
     type: "fill",
@@ -236,4 +238,85 @@ export function addProjectionLayers(map: MapLibreMap) {
       "text-opacity": 0.94,
     },
   });
+}
+
+type StyleLayerLike = {
+  id: string;
+  type: string;
+  source?: string;
+  "source-layer"?: string;
+};
+
+type BuildingLayerLike = StyleLayerLike & {
+  source: string;
+  "source-layer": string;
+};
+
+function addContextualBuildingsLayer(map: MapLibreMap) {
+  const styleLayers = (map.getStyle().layers ?? []) as StyleLayerLike[];
+  const buildingLayer = styleLayers.find(
+    (layer): layer is BuildingLayerLike =>
+      layer.source === "composite" && layer["source-layer"] === "building",
+  );
+
+  if (!buildingLayer || map.getLayer("contextual-buildings")) {
+    return;
+  }
+
+  const firstSymbolLayerId = styleLayers.find((layer) => layer.type === "symbol")?.id;
+
+  map.addLayer(
+    {
+      id: "contextual-buildings",
+      type: "fill-extrusion",
+      source: buildingLayer.source,
+      "source-layer": buildingLayer["source-layer"],
+      minzoom: 9,
+      filter: ["==", ["get", "extrude"], "true"],
+      paint: {
+        "fill-extrusion-color": [
+          "interpolate",
+          ["linear"],
+          ["coalesce", ["get", "height"], 0],
+          0,
+          "#102535",
+          120,
+          "#18384c",
+          320,
+          "#2b5a74",
+        ],
+        "fill-extrusion-base": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9,
+          0,
+          11,
+          ["coalesce", ["get", "min_height"], 0],
+        ],
+        "fill-extrusion-height": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9,
+          0,
+          11,
+          ["coalesce", ["get", "height"], 0],
+        ],
+        "fill-extrusion-opacity": [
+          "interpolate",
+          ["linear"],
+          ["zoom"],
+          9,
+          0,
+          10,
+          0.08,
+          12,
+          0.22,
+        ],
+        "fill-extrusion-vertical-gradient": true,
+      },
+    },
+    firstSymbolLayerId,
+  );
 }

@@ -50,7 +50,8 @@ export async function fetchNearbyBoatsFromAISStream({
   radiusNauticalMiles,
   apiKey,
 }: FetchNearbyBoatsRequest): Promise<BoatFeed> {
-  const bounds = buildBoundingBox(latitude, longitude, radiusNauticalMiles * 1.15078);
+  const radiusMiles = radiusNauticalMiles * 1.15078;
+  const bounds = buildBoundingBox(latitude, longitude, radiusMiles);
   const boatsByMmsi = new Map<number, MutableBoat>();
 
   const socket = new WebSocket(aisStreamUrl);
@@ -110,7 +111,8 @@ export async function fetchNearbyBoatsFromAISStream({
   socket.send(
     JSON.stringify({
       APIKey: apiKey,
-      BoundingBoxes: [[[bounds.swlat, bounds.swlng], [bounds.nelat, bounds.nelng]]],
+      // AISStream expects each corner as [longitude, latitude].
+      BoundingBoxes: [[[bounds.swlng, bounds.swlat], [bounds.nelng, bounds.nelat]]],
       FilterMessageTypes: [
         "PositionReport",
         "StandardClassBPositionReport",
@@ -133,7 +135,7 @@ export async function fetchNearbyBoatsFromAISStream({
       (boat): boat is MutableBoat & { latitude: number; longitude: number } =>
         boat.latitude !== null && boat.longitude !== null,
     )
-    .filter((boat) => withinRadiusMiles(latitude, longitude, boat.latitude, boat.longitude, radiusNauticalMiles))
+    .filter((boat) => withinRadiusMiles(latitude, longitude, boat.latitude, boat.longitude, radiusMiles))
     .map(
       (boat): Boat => ({
         id: boat.id,
