@@ -54,6 +54,21 @@ export function ObservatoryMapCanvas({
   const mapRef = useRef<MapLibreMap | null>(null);
   const animatedAircraftRef = useRef<Aircraft[]>([]);
   const aircraftAnimationFrameRef = useRef<number | null>(null);
+  const latestRenderStateRef = useRef({
+    animalObservations,
+    boats,
+    layers,
+  });
+  const initialLocationRef = useRef(location);
+  const initialRadiusNauticalMilesRef = useRef(radiusNauticalMiles);
+
+  useEffect(() => {
+    latestRenderStateRef.current = {
+      animalObservations,
+      boats,
+      layers,
+    };
+  }, [animalObservations, boats, layers]);
 
   const renderAircraft = useCallback((nextAircraft: Aircraft[]) => {
     animatedAircraftRef.current = nextAircraft;
@@ -91,13 +106,19 @@ export function ObservatoryMapCanvas({
       return;
     }
 
+    const initialLocation = initialLocationRef.current;
+    const initialRadiusNauticalMiles = initialRadiusNauticalMilesRef.current;
+
     const map = new maplibregl.Map({
       container: mapNodeRef.current,
       style: mapStyleUrl,
-      center: [location.coordinates.longitude, location.coordinates.latitude],
-      zoom: initialZoomForRadius(radiusNauticalMiles),
+      center: [
+        initialLocation.coordinates.longitude,
+        initialLocation.coordinates.latitude,
+      ],
+      zoom: initialZoomForRadius(initialRadiusNauticalMiles),
       bearing: 0,
-      pitch: pitchForRadius(radiusNauticalMiles),
+      pitch: pitchForRadius(initialRadiusNauticalMiles),
       attributionControl: false,
     });
 
@@ -115,10 +136,16 @@ export function ObservatoryMapCanvas({
     });
 
     map.once("style.load", () => {
+      const { animalObservations, boats, layers } = latestRenderStateRef.current;
+
       map.resize();
       registerAircraftIcon(map);
       registerBoatIcon(map);
-      addProjectionSources(map, location.coordinates, radiusNauticalMiles);
+      addProjectionSources(
+        map,
+        initialLocation.coordinates,
+        initialRadiusNauticalMiles,
+      );
       addProjectionLayers(map);
       renderAircraft(animatedAircraftRef.current);
       renderAnimals(layers.animals ? animalObservations : []);
@@ -132,7 +159,7 @@ export function ObservatoryMapCanvas({
       map.remove();
       mapRef.current = null;
     };
-  }, [location, radiusNauticalMiles, renderAircraft, renderAnimals, renderBoats]);
+  }, [renderAircraft, renderAnimals, renderBoats]);
 
   useEffect(() => {
     if (!mapRef.current) {

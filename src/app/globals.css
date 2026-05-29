@@ -311,6 +311,10 @@ input[type="range"] {
   letter-spacing: -0.02em;
 }
 
+.status-message {
+  white-space: pre-line;
+}
+
 .status-meta {
   font-size: 0.76rem;
   font-variant-numeric: tabular-nums;
