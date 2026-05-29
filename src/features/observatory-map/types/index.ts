@@ -29,6 +29,7 @@ export type AircraftFeatureProperties = {
   id: string;
   title: string;
   detail: string;
+  themeMode: "day" | "night";
   altitudeFeet: number;
   headingDegrees: number;
   speedKnots: number;
@@ -39,6 +40,7 @@ export type AnimalFeatureProperties = {
   id: string;
   title: string;
   detail: string;
+  themeMode: "day" | "night";
   iconicTaxon: string;
 };
 
@@ -46,6 +48,7 @@ export type BoatFeatureProperties = {
   id: string;
   title: string;
   detail: string;
+  themeMode: "day" | "night";
   headingDegrees: number;
   vesselTypeCode: number;
   distanceNauticalMiles: number;

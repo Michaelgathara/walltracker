@@ -1,6 +1,6 @@
 import type { Map as MapLibreMap } from "maplibre-gl";
 
-import { boatIconId } from "../constants";
+import { aircraftIconId, boatIconId } from "../constants";
 
 export function addProjectionLayers(map: MapLibreMap) {
   addContextualBuildingsLayer(map);
@@ -62,7 +62,12 @@ export function addProjectionLayers(map: MapLibreMap) {
     source: "aircraft-trails",
     paint: {
       "line-color": "#9fe8ff",
-      "line-opacity": 0.52,
+      "line-opacity": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        0.34,
+        0.52,
+      ],
       "line-width": 2.1,
       "line-blur": 1.2,
     },
@@ -73,7 +78,12 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "circle",
     source: "aircraft",
     paint: {
-      "circle-color": "#8df4d2",
+      "circle-color": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        "#1a7469",
+        "#8df4d2",
+      ],
       "circle-radius": [
         "interpolate",
         ["linear"],
@@ -83,7 +93,12 @@ export function addProjectionLayers(map: MapLibreMap) {
         45000,
         20,
       ],
-      "circle-opacity": 0.2,
+      "circle-opacity": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        0.1,
+        0.2,
+      ],
       "circle-blur": 1.3,
     },
   });
@@ -93,7 +108,12 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "symbol",
     source: "aircraft",
     layout: {
-      "icon-image": "aircraft-marker",
+      "icon-image": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        `${aircraftIconId}-day`,
+        aircraftIconId,
+      ],
       "icon-size": 0.7,
       "icon-rotate": ["get", "headingDegrees"],
       "icon-rotation-alignment": "map",
@@ -101,7 +121,12 @@ export function addProjectionLayers(map: MapLibreMap) {
       "icon-ignore-placement": true,
     },
     paint: {
-      "icon-opacity": 0.98,
+      "icon-opacity": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        0.9,
+        0.98,
+      ],
     },
   });
 
@@ -144,10 +169,30 @@ export function addProjectionLayers(map: MapLibreMap) {
       "symbol-sort-key": ["get", "distanceNauticalMiles"],
     },
     paint: {
-      "text-color": "#f4fff9",
-      "text-halo-color": "rgba(4, 17, 29, 0.92)",
-      "text-halo-width": 2,
-      "text-opacity": 0.98,
+      "text-color": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        "#162d34",
+        "#f4fff9",
+      ],
+      "text-halo-color": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        "rgba(255, 255, 255, 0.86)",
+        "rgba(4, 17, 29, 0.92)",
+      ],
+      "text-halo-width": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        1.35,
+        2,
+      ],
+      "text-opacity": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        0.82,
+        0.98,
+      ],
     },
   });
 
@@ -234,9 +279,19 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "circle",
     source: "boats",
     paint: {
-      "circle-color": "#91d7ff",
+      "circle-color": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        "#336b89",
+        "#91d7ff",
+      ],
       "circle-radius": 11,
-      "circle-opacity": 0.16,
+      "circle-opacity": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        0.1,
+        0.16,
+      ],
       "circle-blur": 1.1,
     },
   });
@@ -246,7 +301,12 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "symbol",
     source: "boats",
     layout: {
-      "icon-image": boatIconId,
+      "icon-image": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        `${boatIconId}-day`,
+        boatIconId,
+      ],
       "icon-size": 0.7,
       "icon-rotate": ["get", "headingDegrees"],
       "icon-rotation-alignment": "map",
@@ -254,7 +314,12 @@ export function addProjectionLayers(map: MapLibreMap) {
       "icon-ignore-placement": true,
     },
     paint: {
-      "icon-opacity": 0.96,
+      "icon-opacity": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        0.88,
+        0.96,
+      ],
     },
   });
 
@@ -295,10 +360,30 @@ export function addProjectionLayers(map: MapLibreMap) {
       "symbol-sort-key": ["get", "distanceNauticalMiles"],
     },
     paint: {
-      "text-color": "#e9f6ff",
-      "text-halo-color": "rgba(8, 20, 31, 0.92)",
-      "text-halo-width": 2,
-      "text-opacity": 0.94,
+      "text-color": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        "#173244",
+        "#e9f6ff",
+      ],
+      "text-halo-color": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        "rgba(255, 255, 255, 0.88)",
+        "rgba(8, 20, 31, 0.92)",
+      ],
+      "text-halo-width": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        1.35,
+        2,
+      ],
+      "text-opacity": [
+        "case",
+        ["==", ["get", "themeMode"], "day"],
+        0.8,
+        0.94,
+      ],
     },
   });
 }
