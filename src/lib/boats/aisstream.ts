@@ -71,20 +71,20 @@ export async function fetchNearbyBoatsFromAISStream({
       socket.removeEventListener("close", handleClose);
     };
 
-    const handleMessage = (event: MessageEvent<string>) => {
-      try {
-        const payload = JSON.parse(event.data) as AISStreamEvent;
+    const handleMessage = (event: MessageEvent) => {
+      void parseAISStreamPayload(event.data)
+        .then((payload) => {
+          if (payload.error) {
+            cleanup();
+            reject(new Error(payload.error));
+            return;
+          }
 
-        if (payload.error) {
-          cleanup();
-          reject(new Error(payload.error));
-          return;
-        }
-
-        ingestAISStreamEvent(boatsByMmsi, payload);
-      } catch {
-        // Ignore malformed stream events and keep collecting the snapshot.
-      }
+          ingestAISStreamEvent(boatsByMmsi, payload);
+        })
+        .catch(() => {
+          // Ignore malformed stream events and keep collecting the snapshot.
+        });
     };
 
     const handleError = () => {
@@ -111,8 +111,8 @@ export async function fetchNearbyBoatsFromAISStream({
   socket.send(
     JSON.stringify({
       APIKey: apiKey,
-      // AISStream expects each corner as [longitude, latitude].
-      BoundingBoxes: [[[bounds.swlng, bounds.swlat], [bounds.nelng, bounds.nelat]]],
+      // AISStream expects each corner as [latitude, longitude].
+      BoundingBoxes: [[[bounds.swlat, bounds.swlng], [bounds.nelat, bounds.nelng]]],
       FilterMessageTypes: [
         "PositionReport",
         "StandardClassBPositionReport",
@@ -174,6 +174,22 @@ export async function fetchNearbyBoatsFromAISStream({
     freshness: boats.length > 0 ? "live" : "empty",
     cacheAgeSeconds: null,
   };
+}
+
+async function parseAISStreamPayload(data: MessageEvent["data"]) {
+  if (typeof data === "string") {
+    return JSON.parse(data) as AISStreamEvent;
+  }
+
+  if (data instanceof Blob) {
+    return JSON.parse(await data.text()) as AISStreamEvent;
+  }
+
+  if (data instanceof ArrayBuffer) {
+    return JSON.parse(new TextDecoder().decode(data)) as AISStreamEvent;
+  }
+
+  throw new Error("Unsupported AISStream websocket payload");
 }
 
 function awaitSocketOpen(socket: WebSocket) {
