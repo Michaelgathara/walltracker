@@ -29,7 +29,6 @@ export function ObservatoryHud({
   return (
     <>
       <section className="hud hud--primary" aria-label="Tracker controls">
-        {/* <p className="eyebrow">Walltracker</p> */}
         <h1>{pageTitle}</h1>
         <p className="lede">{lede}</p>
 
@@ -105,7 +104,7 @@ export function ObservatoryHud({
         </div>
         <div className="status-block">
           <p className="eyebrow">Feed</p>
-          <strong style={{ whiteSpace: "pre-line" }}>{statusFeed.message}</strong>
+          <strong className="status-message">{statusFeed.message}</strong>
           {statusFeed.status === "ready" ? (
             <span className="status-meta">
               Updated {new Date(statusFeed.updatedAt).toLocaleTimeString()}

@@ -24,12 +24,21 @@ export function CeilingFlightMap() {
     boats: true,
   });
   const [mapRotationDegrees, setMapRotationDegrees] = useState(0);
-  const { aircraft, feedState } = useAircraftFeed(location, radiusNauticalMiles);
+  const { aircraft, feedState } = useAircraftFeed(
+    location,
+    radiusNauticalMiles,
+    layers.aircraft,
+  );
   const { animalObservations, animalFeedState } = useAnimalFeed(
     location,
     radiusNauticalMiles,
+    layers.animals,
   );
-  const { boats, boatFeedState } = useBoatFeed(location, radiusNauticalMiles);
+  const { boats, boatFeedState } = useBoatFeed(
+    location,
+    radiusNauticalMiles,
+    layers.boats,
+  );
   const sunState = useSunState(location);
 
   const toggleLayer = useCallback((layer: DisplayLayer) => {

@@ -67,11 +67,8 @@ export async function fetchNearbyAnimalObservations({
   longitude,
   radiusNauticalMiles,
 }: FetchNearbyAnimalObservationsRequest): Promise<AnimalObservationFeed> {
-  const endpoint = buildObservationsEndpoint(
-    latitude,
-    longitude,
-    radiusNauticalMiles,
-  );
+  const radiusMiles = radiusNauticalMiles * 1.15078;
+  const endpoint = buildObservationsEndpoint(latitude, longitude, radiusMiles);
 
   const response = await fetch(endpoint, {
     headers: {
@@ -171,7 +168,7 @@ export async function fetchNearbyAnimalObservations({
         longitude,
         observation.latitude,
         observation.longitude,
-        radiusNauticalMiles,
+        radiusMiles,
       ),
     )
     .slice(0, 18);
@@ -186,9 +183,9 @@ export async function fetchNearbyAnimalObservations({
 function buildObservationsEndpoint(
   latitude: number,
   longitude: number,
-  radiusNauticalMiles: number,
+  radiusMiles: number,
 ) {
-  const bounds = buildBoundingBox(latitude, longitude, radiusNauticalMiles);
+  const bounds = buildBoundingBox(latitude, longitude, radiusMiles);
   const endpoint = new URL("https://api.inaturalist.org/v1/observations");
 
   endpoint.searchParams.set("order_by", "observed_on");
