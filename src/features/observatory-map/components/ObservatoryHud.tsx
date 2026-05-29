@@ -29,7 +29,7 @@ export function ObservatoryHud({
   return (
     <>
       <section className="hud hud--primary" aria-label="Tracker controls">
-        <p className="eyebrow">Walltracker / Aircraft</p>
+        {/* <p className="eyebrow">Walltracker</p> */}
         <h1>{pageTitle}</h1>
         <p className="lede">{lede}</p>
 

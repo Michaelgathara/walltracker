@@ -106,15 +106,38 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "symbol",
     source: "aircraft",
     layout: {
-      "text-field": ["concat", ["get", "title"], "\n", ["get", "detail"]],
+      "text-field": buildResponsiveLabelField(),
       "text-font": ["Open Sans Regular"],
-      "text-size": 11,
+      "text-size": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        6,
+        9.5,
+        10,
+        10.5,
+        13,
+        11,
+      ],
       "text-line-height": 1.25,
-      "text-offset": [0, 1.8],
       "text-anchor": "top",
-      "text-allow-overlap": true,
-      "text-ignore-placement": true,
-      "symbol-sort-key": ["*", -1, ["get", "distanceNauticalMiles"]],
+      "text-variable-anchor": [
+        "top",
+        "bottom",
+        "left",
+        "right",
+        "top-left",
+        "top-right",
+        "bottom-left",
+        "bottom-right",
+      ],
+      "text-radial-offset": 1.55,
+      "text-justify": "auto",
+      "text-max-width": 10,
+      "text-padding": 3,
+      "text-allow-overlap": false,
+      "text-ignore-placement": false,
+      "symbol-sort-key": ["get", "distanceNauticalMiles"],
     },
     paint: {
       "text-color": "#f4fff9",
@@ -170,14 +193,29 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "symbol",
     source: "animal-observations",
     layout: {
-      "text-field": ["concat", ["get", "title"], "\n", ["get", "detail"]],
+      "text-field": buildResponsiveLabelField(),
       "text-font": ["Open Sans Regular"],
-      "text-size": 10,
+      "text-size": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        6,
+        9,
+        10,
+        9.5,
+        13,
+        10,
+      ],
       "text-line-height": 1.2,
-      "text-offset": [0.85, 0],
       "text-anchor": "left",
-      "text-allow-overlap": true,
-      "text-ignore-placement": true,
+      "text-variable-anchor": ["left", "right", "top-left", "bottom-left"],
+      "text-radial-offset": 0.95,
+      "text-justify": "auto",
+      "text-max-width": 10,
+      "text-padding": 2,
+      "text-allow-overlap": false,
+      "text-ignore-placement": false,
+      "symbol-sort-key": ["get", "title"],
     },
     paint: {
       "text-color": "#f7f0e2",
@@ -221,15 +259,36 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "symbol",
     source: "boats",
     layout: {
-      "text-field": ["concat", ["get", "title"], "\n", ["get", "detail"]],
+      "text-field": buildResponsiveLabelField(),
       "text-font": ["Open Sans Regular"],
-      "text-size": 10,
+      "text-size": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        6,
+        9,
+        10,
+        9.75,
+        13,
+        10.5,
+      ],
       "text-line-height": 1.2,
-      "text-offset": [0, 1.55],
       "text-anchor": "top",
-      "text-allow-overlap": true,
-      "text-ignore-placement": true,
-      "symbol-sort-key": ["*", -1, ["get", "distanceNauticalMiles"]],
+      "text-variable-anchor": [
+        "top",
+        "bottom",
+        "left",
+        "right",
+        "top-left",
+        "top-right",
+      ],
+      "text-radial-offset": 1.35,
+      "text-justify": "auto",
+      "text-max-width": 10,
+      "text-padding": 3,
+      "text-allow-overlap": false,
+      "text-ignore-placement": false,
+      "symbol-sort-key": ["get", "distanceNauticalMiles"],
     },
     paint: {
       "text-color": "#e9f6ff",
@@ -251,6 +310,14 @@ type BuildingLayerLike = StyleLayerLike & {
   source: string;
   "source-layer": string;
 };
+
+type ResponsiveLabelField = [
+  "step",
+  ["zoom"],
+  ["get", "title"],
+  number,
+  ["concat", ["get", "title"], "\n", ["get", "detail"]],
+];
 
 function addContextualBuildingsLayer(map: MapLibreMap) {
   const styleLayers = (map.getStyle().layers ?? []) as StyleLayerLike[];
@@ -319,4 +386,14 @@ function addContextualBuildingsLayer(map: MapLibreMap) {
     },
     firstSymbolLayerId,
   );
+}
+
+function buildResponsiveLabelField() {
+  return [
+    "step",
+    ["zoom"],
+    ["get", "title"],
+    10,
+    ["concat", ["get", "title"], "\n", ["get", "detail"]],
+  ] satisfies ResponsiveLabelField;
 }
