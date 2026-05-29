@@ -1,0 +1,10 @@
+---
+description: Keep commit attribution limited to the human author
+alwaysApply: true
+---
+
+# Git Attribution
+
+Do not add `Co-authored-by` trailers for AI tools or any other person.
+
+When creating commits, use only the requested commit message and preserve the configured human Git author/committer identity.

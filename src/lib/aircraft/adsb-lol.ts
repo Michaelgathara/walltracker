@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { Aircraft, AircraftFeed } from "./types";
+import type { Aircraft, AircraftFeed } from "@/types";
 
 const adsbAircraftSchema = z.object({
   hex: z.string().optional(),
