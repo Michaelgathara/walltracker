@@ -68,6 +68,7 @@ export function CeilingFlightMap() {
             location={location}
             mapRotationDegrees={mapRotationDegrees}
             radiusNauticalMiles={radiusNauticalMiles}
+            sunPhase={theme}
           />
         ) : (
           <LocationPrompt status={location.status} onRetry={requestLocation} />

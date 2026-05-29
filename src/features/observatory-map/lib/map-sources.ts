@@ -19,30 +19,45 @@ export function addProjectionSources(
   coordinates: Coordinates,
   radiusNauticalMiles: number,
 ) {
-  map.addSource("receiver-position", {
+  setOrAddSource(map, "receiver-position", {
     type: "geojson",
     data: buildReceiverFeatureCollection(coordinates),
   });
-  map.addSource("aircraft", {
+  setOrAddSource(map, "aircraft", {
     type: "geojson",
     data: buildAircraftFeatureCollection([]),
   });
-  map.addSource("aircraft-trails", {
+  setOrAddSource(map, "aircraft-trails", {
     type: "geojson",
     data: buildTrailFeatureCollection([]),
   });
-  map.addSource("animal-observations", {
+  setOrAddSource(map, "animal-observations", {
     type: "geojson",
     data: buildAnimalFeatureCollection([]),
   });
-  map.addSource("boats", {
+  setOrAddSource(map, "boats", {
     type: "geojson",
     data: buildBoatFeatureCollection([]),
   });
-  map.addSource("receiver-radius", {
+  setOrAddSource(map, "receiver-radius", {
     type: "geojson",
     data: buildRadiusFeatureCollection(coordinates, radiusNauticalMiles),
   });
+}
+
+function setOrAddSource(
+  map: MapLibreMap,
+  sourceId: string,
+  source: { type: "geojson"; data: Parameters<GeoJSONSource["setData"]>[0] },
+) {
+  const existingSource = map.getSource(sourceId) as GeoJSONSource | undefined;
+
+  if (existingSource) {
+    existingSource.setData(source.data);
+    return;
+  }
+
+  map.addSource(sourceId, source);
 }
 
 export function updateSource(

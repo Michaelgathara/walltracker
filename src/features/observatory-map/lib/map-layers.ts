@@ -5,6 +5,10 @@ import { boatIconId } from "../constants";
 export function addProjectionLayers(map: MapLibreMap) {
   addContextualBuildingsLayer(map);
 
+  if (map.getLayer("receiver-radius-fill")) {
+    return;
+  }
+
   map.addLayer({
     id: "receiver-radius-fill",
     type: "fill",

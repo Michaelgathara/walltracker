@@ -18,11 +18,10 @@ export function registerAircraftIcon(map: MapLibreMap) {
   }
 
   context.translate(iconSize / 2, iconSize / 2);
-  context.shadowColor = "rgba(109, 255, 215, 0.45)";
-  context.shadowBlur = 16;
+  context.lineJoin = "round";
+  context.shadowColor = "rgba(3, 10, 14, 0.42)";
+  context.shadowBlur = 10;
   context.fillStyle = "#ecfff7";
-  context.strokeStyle = "#7af3ce";
-  context.lineWidth = 2.5;
 
   context.beginPath();
   context.moveTo(0, -28);
@@ -42,7 +41,12 @@ export function registerAircraftIcon(map: MapLibreMap) {
   context.lineTo(-23, -2);
   context.lineTo(-5, -8);
   context.closePath();
+  context.strokeStyle = "rgba(3, 18, 24, 0.92)";
+  context.lineWidth = 6;
+  context.stroke();
   context.fill();
+  context.strokeStyle = "#43d8b8";
+  context.lineWidth = 2.5;
   context.stroke();
 
   map.addImage(aircraftIconId, context.getImageData(0, 0, iconSize, iconSize), {
@@ -67,11 +71,10 @@ export function registerBoatIcon(map: MapLibreMap) {
   }
 
   context.translate(iconSize / 2, iconSize / 2);
-  context.shadowColor = "rgba(126, 203, 255, 0.4)";
-  context.shadowBlur = 12;
+  context.lineJoin = "round";
+  context.shadowColor = "rgba(4, 13, 21, 0.38)";
+  context.shadowBlur = 9;
   context.fillStyle = "#eff8ff";
-  context.strokeStyle = "#8fd0ff";
-  context.lineWidth = 2.2;
 
   context.beginPath();
   context.moveTo(0, -24);
@@ -81,12 +84,22 @@ export function registerBoatIcon(map: MapLibreMap) {
   context.lineTo(-14, 12);
   context.lineTo(-10, -2);
   context.closePath();
+  context.strokeStyle = "rgba(4, 16, 26, 0.9)";
+  context.lineWidth = 5.5;
+  context.stroke();
   context.fill();
+  context.strokeStyle = "#4caee4";
+  context.lineWidth = 2.2;
   context.stroke();
 
   context.beginPath();
   context.moveTo(-18, 10);
   context.quadraticCurveTo(0, 20, 18, 10);
+  context.strokeStyle = "rgba(4, 16, 26, 0.9)";
+  context.lineWidth = 5;
+  context.stroke();
+  context.strokeStyle = "#4caee4";
+  context.lineWidth = 2.2;
   context.stroke();
 
   map.addImage(boatIconId, context.getImageData(0, 0, iconSize, iconSize), {
