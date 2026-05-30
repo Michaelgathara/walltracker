@@ -1,5 +1,5 @@
 import type { GeoJSONSource, Map as MapLibreMap } from "maplibre-gl";
-import type { Aircraft, AnimalObservation, Boat, Coordinates } from "@/types";
+import type { Aircraft, AnimalObservation, Boat, Coordinates, SunPhase } from "@/types";
 import type {
   AircraftFeatureProperties,
   AnimalFeatureProperties,
@@ -18,31 +18,47 @@ export function addProjectionSources(
   map: MapLibreMap,
   coordinates: Coordinates,
   radiusNauticalMiles: number,
+  sunPhase: SunPhase,
 ) {
-  map.addSource("receiver-position", {
+  setOrAddSource(map, "receiver-position", {
     type: "geojson",
     data: buildReceiverFeatureCollection(coordinates),
   });
-  map.addSource("aircraft", {
+  setOrAddSource(map, "aircraft", {
     type: "geojson",
-    data: buildAircraftFeatureCollection([]),
+    data: buildAircraftFeatureCollection([], sunPhase),
   });
-  map.addSource("aircraft-trails", {
+  setOrAddSource(map, "aircraft-trails", {
     type: "geojson",
-    data: buildTrailFeatureCollection([]),
+    data: buildTrailFeatureCollection([], sunPhase),
   });
-  map.addSource("animal-observations", {
+  setOrAddSource(map, "animal-observations", {
     type: "geojson",
-    data: buildAnimalFeatureCollection([]),
+    data: buildAnimalFeatureCollection([], sunPhase),
   });
-  map.addSource("boats", {
+  setOrAddSource(map, "boats", {
     type: "geojson",
-    data: buildBoatFeatureCollection([]),
+    data: buildBoatFeatureCollection([], sunPhase),
   });
-  map.addSource("receiver-radius", {
+  setOrAddSource(map, "receiver-radius", {
     type: "geojson",
     data: buildRadiusFeatureCollection(coordinates, radiusNauticalMiles),
   });
+}
+
+function setOrAddSource(
+  map: MapLibreMap,
+  sourceId: string,
+  source: { type: "geojson"; data: Parameters<GeoJSONSource["setData"]>[0] },
+) {
+  const existingSource = map.getSource(sourceId) as GeoJSONSource | undefined;
+
+  if (existingSource) {
+    existingSource.setData(source.data);
+    return;
+  }
+
+  map.addSource(sourceId, source);
 }
 
 export function updateSource(
@@ -73,7 +89,12 @@ export function buildReceiverFeatureCollection(coordinates: Coordinates) {
   };
 }
 
-export function buildAircraftFeatureCollection(aircraft: Aircraft[]) {
+export function buildAircraftFeatureCollection(
+  aircraft: Aircraft[],
+  sunPhase: SunPhase,
+) {
+  const themeMode = getThemeMode(sunPhase);
+
   return {
     type: "FeatureCollection" as const,
     features: aircraft.map((trackedAircraft) => ({
@@ -86,6 +107,7 @@ export function buildAircraftFeatureCollection(aircraft: Aircraft[]) {
         id: trackedAircraft.id,
         title: buildAircraftTitle(trackedAircraft),
         detail: buildAircraftDetail(trackedAircraft),
+        themeMode,
         altitudeFeet: trackedAircraft.altitudeFeet ?? 0,
         headingDegrees: trackedAircraft.headingDegrees ?? 0,
         speedKnots: trackedAircraft.groundSpeedKnots ?? 0,
@@ -95,7 +117,12 @@ export function buildAircraftFeatureCollection(aircraft: Aircraft[]) {
   };
 }
 
-export function buildAnimalFeatureCollection(observations: AnimalObservation[]) {
+export function buildAnimalFeatureCollection(
+  observations: AnimalObservation[],
+  sunPhase: SunPhase,
+) {
+  const themeMode = getThemeMode(sunPhase);
+
   return {
     type: "FeatureCollection" as const,
     features: observations.map((observation) => ({
@@ -108,13 +135,16 @@ export function buildAnimalFeatureCollection(observations: AnimalObservation[]) 
         id: observation.id,
         title: buildAnimalTitle(observation),
         detail: buildAnimalDetail(observation),
+        themeMode,
         iconicTaxon: observation.iconicTaxon ?? "Animalia",
       } satisfies AnimalFeatureProperties,
     })),
   };
 }
 
-export function buildBoatFeatureCollection(boats: Boat[]) {
+export function buildBoatFeatureCollection(boats: Boat[], sunPhase: SunPhase) {
+  const themeMode = getThemeMode(sunPhase);
+
   return {
     type: "FeatureCollection" as const,
     features: boats.map((boat) => ({
@@ -127,6 +157,7 @@ export function buildBoatFeatureCollection(boats: Boat[]) {
         id: boat.id,
         title: buildBoatTitle(boat),
         detail: buildBoatDetail(boat),
+        themeMode,
         headingDegrees: boat.headingDegrees ?? boat.courseDegrees ?? 0,
         vesselTypeCode: boat.vesselTypeCode ?? 0,
         distanceNauticalMiles: boat.distanceNauticalMiles ?? 999,
@@ -135,7 +166,16 @@ export function buildBoatFeatureCollection(boats: Boat[]) {
   };
 }
 
-export function buildTrailFeatureCollection(aircraft: Aircraft[]) {
+function getThemeMode(sunPhase: SunPhase) {
+  return sunPhase === "day" ? "day" : "night";
+}
+
+export function buildTrailFeatureCollection(
+  aircraft: Aircraft[],
+  sunPhase: SunPhase,
+) {
+  const themeMode = getThemeMode(sunPhase);
+
   return {
     type: "FeatureCollection" as const,
     features: aircraft
@@ -151,6 +191,7 @@ export function buildTrailFeatureCollection(aircraft: Aircraft[]) {
         },
         properties: {
           id: trackedAircraft.id,
+          themeMode,
         },
       })),
   };

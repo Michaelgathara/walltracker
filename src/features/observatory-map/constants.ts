@@ -1,6 +1,15 @@
-export const defaultMapStyleUrl = "/api/mapbox/style?style=dark-v11";
-export const mapStyleUrl =
-  process.env.NEXT_PUBLIC_MAP_STYLE_URL ?? defaultMapStyleUrl;
+import type { SunPhase } from "@/types";
+
+const defaultMapStyleUrls = {
+  dawn: "/api/mapbox/style?style=outdoors-v12",
+  day: "/api/mapbox/style?style=streets-v12",
+  dusk: "/api/mapbox/style?style=streets-v12",
+  night: "/api/mapbox/style?style=dark-v11",
+} satisfies Record<SunPhase, string>;
+
+export function getMapStyleUrl(sunPhase: SunPhase) {
+  return process.env.NEXT_PUBLIC_MAP_STYLE_URL ?? defaultMapStyleUrls[sunPhase];
+}
 
 export const aircraftRefreshIntervalMs = 10_000;
 export const animalRefreshIntervalMs = 60_000;
