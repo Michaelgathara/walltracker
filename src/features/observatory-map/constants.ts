@@ -2,7 +2,7 @@ import type { SunPhase } from "@/types";
 
 const defaultMapStyleUrls = {
   dawn: "/api/mapbox/style?style=outdoors-v12",
-  day: "/api/mapbox/style?style=light-v11",
+  day: "/api/mapbox/style?style=streets-v12",
   dusk: "/api/mapbox/style?style=streets-v12",
   night: "/api/mapbox/style?style=dark-v11",
 } satisfies Record<SunPhase, string>;

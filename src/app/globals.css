@@ -77,10 +77,10 @@ button:active {
 
 .sky-shell--day {
   --shell-background:
-    radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.18), transparent 32rem),
-    linear-gradient(180deg, #cfe8f4, #96bed2 52%, #56798b);
-  --map-tint: rgba(255, 255, 255, 0.05);
-  --map-glow: rgba(245, 255, 255, 0.16);
+    radial-gradient(circle at 50% 42%, rgba(221, 238, 237, 0.14), transparent 32rem),
+    linear-gradient(180deg, #9ec4cc, #6f9dad 52%, #385969);
+  --map-tint: rgba(64, 98, 108, 0.045);
+  --map-glow: rgba(139, 202, 210, 0.1);
 }
 
 .sky-shell--dusk {
@@ -112,15 +112,19 @@ button:active {
 }
 
 .sky-shell--day .map-canvas-shell {
-  filter: saturate(0.92) brightness(1.05) contrast(0.98);
+  filter: saturate(0.95) brightness(0.92) contrast(1.06);
 }
 
 .sky-shell--day .atmosphere--one {
-  opacity: 0.22;
+  opacity: 0.12;
+}
+
+.sky-shell--day .atmosphere--two {
+  opacity: 0.08;
 }
 
 .sky-shell--day .scanline {
-  opacity: 0.05;
+  opacity: 0.035;
 }
 
 .maplibregl-ctrl-bottom-right {
