@@ -12,9 +12,9 @@ type ObservatoryHudProps = {
   onRotationChange: (degrees: number) => void;
 };
 
-const pageTitle = "Sky traffic and wildlife";
+const pageTitle = "Local traffic field";
 const lede =
-  "A combined observatory for nearby aircraft, wildlife, and vessel activity around you.";
+  "Trail-first observatory for nearby aircraft, wildlife sightings, and vessel movement.";
 
 export function ObservatoryHud({
   layers,
@@ -28,7 +28,7 @@ export function ObservatoryHud({
 }: ObservatoryHudProps) {
   return (
     <>
-      <section className="hud hud--primary" aria-label="Tracker controls">
+      <section className="hud hud--primary" aria-label="Observatory controls">
         {/* <p className="eyebrow">Walltracker</p> */}
         <h1>{pageTitle}</h1>
         <p className="lede">{lede}</p>
@@ -75,7 +75,7 @@ export function ObservatoryHud({
           </div>
 
           <div className="control-group">
-            <label htmlFor="rotation">Bearing</label>
+            <label htmlFor="rotation">Orientation</label>
             <div className="range-row">
               <input
                 id="rotation"
