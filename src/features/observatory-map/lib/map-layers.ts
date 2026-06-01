@@ -3,8 +3,6 @@ import type { Map as MapLibreMap } from "maplibre-gl";
 import { aircraftIconId, boatIconId } from "../constants";
 
 export function addProjectionLayers(map: MapLibreMap) {
-  addContextualBuildingsLayer(map);
-
   if (map.getLayer("receiver-radius-fill")) {
     return;
   }
@@ -14,8 +12,60 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "fill",
     source: "receiver-radius",
     paint: {
-      "fill-color": "#88c9ff",
-      "fill-opacity": 0.05,
+      "fill-color": "#7dd6ff",
+      "fill-opacity": 0.018,
+    },
+  });
+
+  map.addLayer({
+    id: "receiver-guide-radials-minor",
+    type: "line",
+    source: "receiver-guides",
+    filter: ["all", ["==", ["get", "guide"], "radial"], ["==", ["get", "emphasis"], "minor"]],
+    paint: {
+      "line-color": "#7cd8ff",
+      "line-opacity": 0.08,
+      "line-width": 0.75,
+      "line-dasharray": [1, 5],
+    },
+  });
+
+  map.addLayer({
+    id: "receiver-guide-radials-major",
+    type: "line",
+    source: "receiver-guides",
+    filter: ["all", ["==", ["get", "guide"], "radial"], ["==", ["get", "emphasis"], "major"]],
+    paint: {
+      "line-color": "#8adfff",
+      "line-opacity": 0.14,
+      "line-width": 0.9,
+      "line-dasharray": [2, 6],
+    },
+  });
+
+  map.addLayer({
+    id: "receiver-guide-rings-minor",
+    type: "line",
+    source: "receiver-guides",
+    filter: ["all", ["==", ["get", "guide"], "ring"], ["==", ["get", "emphasis"], "minor"]],
+    paint: {
+      "line-color": "#7cd8ff",
+      "line-opacity": 0.12,
+      "line-width": 0.9,
+      "line-dasharray": [1, 4],
+    },
+  });
+
+  map.addLayer({
+    id: "receiver-guide-rings-major",
+    type: "line",
+    source: "receiver-guides",
+    filter: ["all", ["==", ["get", "guide"], "ring"], ["==", ["get", "emphasis"], "major"]],
+    paint: {
+      "line-color": "#a8ecff",
+      "line-opacity": 0.2,
+      "line-width": 1.1,
+      "line-dasharray": [3, 3],
     },
   });
 
@@ -24,10 +74,10 @@ export function addProjectionLayers(map: MapLibreMap) {
     type: "line",
     source: "receiver-radius",
     paint: {
-      "line-color": "#b7dfff",
-      "line-opacity": 0.28,
-      "line-width": 1,
-      "line-dasharray": [2, 3],
+      "line-color": "#d8f7ff",
+      "line-opacity": 0.4,
+      "line-width": 1.2,
+      "line-dasharray": [4, 3],
     },
   });
 
@@ -37,9 +87,9 @@ export function addProjectionLayers(map: MapLibreMap) {
     source: "receiver-position",
     paint: {
       "circle-color": "#c9f7ff",
-      "circle-radius": 28,
-      "circle-opacity": 0.24,
-      "circle-blur": 1,
+      "circle-radius": 34,
+      "circle-opacity": 0.18,
+      "circle-blur": 1.2,
     },
   });
 
@@ -52,7 +102,7 @@ export function addProjectionLayers(map: MapLibreMap) {
       "circle-radius": 6,
       "circle-stroke-color": "#7ee8ff",
       "circle-stroke-width": 2,
-      "circle-opacity": 0.98,
+      "circle-opacity": 1,
     },
   });
 
@@ -60,16 +110,42 @@ export function addProjectionLayers(map: MapLibreMap) {
     id: "aircraft-trails",
     type: "line",
     source: "aircraft-trails",
+    layout: {
+      "line-cap": "round",
+      "line-join": "round",
+    },
     paint: {
-      "line-color": "#9fe8ff",
+      "line-gradient": [
+        "interpolate",
+        ["linear"],
+        ["line-progress"],
+        0,
+        "rgba(125, 213, 255, 0.02)",
+        0.45,
+        "rgba(125, 213, 255, 0.16)",
+        0.82,
+        "rgba(159, 232, 255, 0.5)",
+        1,
+        "rgba(244, 255, 255, 0.96)",
+      ],
       "line-opacity": [
         "case",
         ["==", ["get", "themeMode"], "day"],
-        0.34,
-        0.52,
+        0.72,
+        0.95,
       ],
-      "line-width": 2.1,
-      "line-blur": 1.2,
+      "line-width": [
+        "interpolate",
+        ["linear"],
+        ["zoom"],
+        6,
+        1.2,
+        10,
+        2.1,
+        13,
+        2.8,
+      ],
+      "line-blur": 0.55,
     },
   });
 
@@ -89,17 +165,17 @@ export function addProjectionLayers(map: MapLibreMap) {
         ["linear"],
         ["get", "altitudeFeet"],
         0,
-        12,
+        8,
         45000,
-        20,
+        14,
       ],
       "circle-opacity": [
         "case",
         ["==", ["get", "themeMode"], "day"],
         0.1,
-        0.2,
+        0.14,
       ],
-      "circle-blur": 1.3,
+      "circle-blur": 1.1,
     },
   });
 
@@ -114,7 +190,7 @@ export function addProjectionLayers(map: MapLibreMap) {
         `${aircraftIconId}-day`,
         aircraftIconId,
       ],
-      "icon-size": 0.7,
+      "icon-size": 0.66,
       "icon-rotate": ["get", "headingDegrees"],
       "icon-rotation-alignment": "map",
       "icon-allow-overlap": true,
@@ -125,7 +201,7 @@ export function addProjectionLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "themeMode"], "day"],
         0.9,
-        0.98,
+        0.95,
       ],
     },
   });
@@ -149,23 +225,14 @@ export function addProjectionLayers(map: MapLibreMap) {
         11,
       ],
       "text-line-height": 1.25,
-      "text-anchor": "top",
-      "text-variable-anchor": [
-        "top",
-        "bottom",
-        "left",
-        "right",
-        "top-left",
-        "top-right",
-        "bottom-left",
-        "bottom-right",
-      ],
-      "text-radial-offset": 1.55,
-      "text-justify": "auto",
+      // Animated sources need a fixed label attachment point to avoid shimmer.
+      "text-anchor": "left",
+      "text-offset": [0.95, 0],
+      "text-justify": "left",
       "text-max-width": 10,
       "text-padding": 3,
-      "text-allow-overlap": false,
-      "text-ignore-placement": false,
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
       "symbol-sort-key": ["get", "distanceNauticalMiles"],
     },
     paint: {
@@ -173,7 +240,7 @@ export function addProjectionLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "themeMode"], "day"],
         "#162d34",
-        "#f4fff9",
+        "#eefcf7",
       ],
       "text-halo-color": [
         "case",
@@ -191,7 +258,7 @@ export function addProjectionLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "themeMode"], "day"],
         0.82,
-        0.98,
+        0.92,
       ],
     },
   });
@@ -202,9 +269,9 @@ export function addProjectionLayers(map: MapLibreMap) {
     source: "animal-observations",
     paint: {
       "circle-color": "#ffd58a",
-      "circle-radius": 13,
-      "circle-opacity": 0.16,
-      "circle-blur": 1.1,
+      "circle-radius": 9,
+      "circle-opacity": 0.1,
+      "circle-blur": 1,
     },
   });
 
@@ -233,7 +300,7 @@ export function addProjectionLayers(map: MapLibreMap) {
       "circle-radius": 4.8,
       "circle-stroke-color": "#fdf7ea",
       "circle-stroke-width": 1.4,
-      "circle-opacity": 0.96,
+      "circle-opacity": 0.92,
     },
   });
 
@@ -270,7 +337,7 @@ export function addProjectionLayers(map: MapLibreMap) {
       "text-color": "#f7f0e2",
       "text-halo-color": "rgba(24, 18, 9, 0.92)",
       "text-halo-width": 2,
-      "text-opacity": 0.94,
+      "text-opacity": 0.88,
     },
   });
 
@@ -285,14 +352,14 @@ export function addProjectionLayers(map: MapLibreMap) {
         "#336b89",
         "#91d7ff",
       ],
-      "circle-radius": 11,
+      "circle-radius": 8.5,
       "circle-opacity": [
         "case",
         ["==", ["get", "themeMode"], "day"],
         0.1,
-        0.16,
+        0.1,
       ],
-      "circle-blur": 1.1,
+      "circle-blur": 1,
     },
   });
 
@@ -307,7 +374,7 @@ export function addProjectionLayers(map: MapLibreMap) {
         `${boatIconId}-day`,
         boatIconId,
       ],
-      "icon-size": 0.7,
+      "icon-size": 0.64,
       "icon-rotate": ["get", "headingDegrees"],
       "icon-rotation-alignment": "map",
       "icon-allow-overlap": true,
@@ -318,7 +385,7 @@ export function addProjectionLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "themeMode"], "day"],
         0.88,
-        0.96,
+        0.92,
       ],
     },
   });
@@ -342,21 +409,13 @@ export function addProjectionLayers(map: MapLibreMap) {
         10.5,
       ],
       "text-line-height": 1.2,
-      "text-anchor": "top",
-      "text-variable-anchor": [
-        "top",
-        "bottom",
-        "left",
-        "right",
-        "top-left",
-        "top-right",
-      ],
-      "text-radial-offset": 1.35,
-      "text-justify": "auto",
+      "text-anchor": "left",
+      "text-offset": [0.9, 0],
+      "text-justify": "left",
       "text-max-width": 10,
       "text-padding": 3,
-      "text-allow-overlap": false,
-      "text-ignore-placement": false,
+      "text-allow-overlap": true,
+      "text-ignore-placement": true,
       "symbol-sort-key": ["get", "distanceNauticalMiles"],
     },
     paint: {
@@ -382,23 +441,11 @@ export function addProjectionLayers(map: MapLibreMap) {
         "case",
         ["==", ["get", "themeMode"], "day"],
         0.8,
-        0.94,
+        0.88,
       ],
     },
   });
 }
-
-type StyleLayerLike = {
-  id: string;
-  type: string;
-  source?: string;
-  "source-layer"?: string;
-};
-
-type BuildingLayerLike = StyleLayerLike & {
-  source: string;
-  "source-layer": string;
-};
 
 type ResponsiveLabelField = [
   "step",
@@ -407,75 +454,6 @@ type ResponsiveLabelField = [
   number,
   ["concat", ["get", "title"], "\n", ["get", "detail"]],
 ];
-
-function addContextualBuildingsLayer(map: MapLibreMap) {
-  const styleLayers = (map.getStyle().layers ?? []) as StyleLayerLike[];
-  const buildingLayer = styleLayers.find(
-    (layer): layer is BuildingLayerLike =>
-      layer.source === "composite" && layer["source-layer"] === "building",
-  );
-
-  if (!buildingLayer || map.getLayer("contextual-buildings")) {
-    return;
-  }
-
-  const firstSymbolLayerId = styleLayers.find((layer) => layer.type === "symbol")?.id;
-
-  map.addLayer(
-    {
-      id: "contextual-buildings",
-      type: "fill-extrusion",
-      source: buildingLayer.source,
-      "source-layer": buildingLayer["source-layer"],
-      minzoom: 9,
-      filter: ["==", ["get", "extrude"], "true"],
-      paint: {
-        "fill-extrusion-color": [
-          "interpolate",
-          ["linear"],
-          ["coalesce", ["get", "height"], 0],
-          0,
-          "#102535",
-          120,
-          "#18384c",
-          320,
-          "#2b5a74",
-        ],
-        "fill-extrusion-base": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          9,
-          0,
-          11,
-          ["coalesce", ["get", "min_height"], 0],
-        ],
-        "fill-extrusion-height": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          9,
-          0,
-          11,
-          ["coalesce", ["get", "height"], 0],
-        ],
-        "fill-extrusion-opacity": [
-          "interpolate",
-          ["linear"],
-          ["zoom"],
-          9,
-          0,
-          10,
-          0.08,
-          12,
-          0.22,
-        ],
-        "fill-extrusion-vertical-gradient": true,
-      },
-    },
-    firstSymbolLayerId,
-  );
-}
 
 function buildResponsiveLabelField() {
   return [

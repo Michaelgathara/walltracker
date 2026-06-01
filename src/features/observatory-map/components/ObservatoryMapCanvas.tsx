@@ -11,13 +11,19 @@ import {
   easeInOutCubic,
   interpolateAircraftCollection,
 } from "../lib/aircraft-animation";
-import { registerAircraftDayIcon, registerAircraftIcon } from "../lib/map-icons";
+import {
+  registerAircraftDayIcon,
+  registerAircraftIcon,
+  registerBoatDayIcon,
+  registerBoatIcon,
+} from "../lib/map-icons";
 import { addProjectionLayers } from "../lib/map-layers";
 import {
   addProjectionSources,
   buildAircraftFeatureCollection,
   buildAnimalFeatureCollection,
   buildBoatFeatureCollection,
+  buildGuideFeatureCollection,
   buildRadiusFeatureCollection,
   buildReceiverFeatureCollection,
   buildTrailFeatureCollection,
@@ -28,7 +34,6 @@ import {
   pitchForRadius,
   zoomForRadius,
 } from "../lib/map-viewport";
-import { registerBoatDayIcon, registerBoatIcon } from "../lib/map-icons";
 import type { LayerState, LocationState } from "../types";
 
 type ObservatoryMapCanvasProps = {
@@ -57,23 +62,35 @@ export function ObservatoryMapCanvas({
   const animatedAircraftRef = useRef<Aircraft[]>([]);
   const aircraftAnimationFrameRef = useRef<number | null>(null);
   const activeMapStyleUrlRef = useRef(getMapStyleUrl(sunPhase));
+  const latestAircraftRef = useRef(aircraft);
+  const latestLocationRef = useRef(location);
+  const latestRadiusRef = useRef(radiusNauticalMiles);
   const latestRenderStateRef = useRef({
     animalObservations,
     boats,
     layers,
     sunPhase,
   });
-  const initialLocationRef = useRef(location);
-  const initialRadiusNauticalMilesRef = useRef(radiusNauticalMiles);
 
   useEffect(() => {
+    latestAircraftRef.current = aircraft;
+    latestLocationRef.current = location;
+    latestRadiusRef.current = radiusNauticalMiles;
     latestRenderStateRef.current = {
       animalObservations,
       boats,
       layers,
       sunPhase,
     };
-  }, [animalObservations, boats, layers, sunPhase]);
+  }, [
+    aircraft,
+    animalObservations,
+    boats,
+    layers,
+    location,
+    radiusNauticalMiles,
+    sunPhase,
+  ]);
 
   const renderAircraft = useCallback((nextAircraft: Aircraft[]) => {
     animatedAircraftRef.current = nextAircraft;
@@ -90,10 +107,7 @@ export function ObservatoryMapCanvas({
     updateSource(
       mapRef.current,
       "aircraft-trails",
-      buildTrailFeatureCollection(
-        nextAircraft,
-        latestRenderStateRef.current.sunPhase,
-      ),
+      buildTrailFeatureCollection(nextAircraft, latestRenderStateRef.current.sunPhase),
     );
   }, []);
 
@@ -128,19 +142,23 @@ export function ObservatoryMapCanvas({
     (
       map: MapLibreMap,
       coordinates: Coordinates,
-      radiusNauticalMiles: number,
+      nextRadiusNauticalMiles: number,
     ) => {
-      const { animalObservations, boats, layers, sunPhase } =
+      const { animalObservations, boats, layers, sunPhase: nextSunPhase } =
         latestRenderStateRef.current;
+      const aircraftToRender =
+        animatedAircraftRef.current.length > 0
+          ? animatedAircraftRef.current
+          : latestAircraftRef.current;
 
       map.resize();
       registerAircraftIcon(map);
       registerAircraftDayIcon(map);
       registerBoatIcon(map);
       registerBoatDayIcon(map);
-      addProjectionSources(map, coordinates, radiusNauticalMiles, sunPhase);
+      addProjectionSources(map, coordinates, nextRadiusNauticalMiles, nextSunPhase);
       addProjectionLayers(map);
-      renderAircraft(layers.aircraft ? animatedAircraftRef.current : []);
+      renderAircraft(layers.aircraft ? aircraftToRender : []);
       renderAnimals(layers.animals ? animalObservations : []);
       renderBoats(layers.boats ? boats : []);
     },
@@ -152,49 +170,84 @@ export function ObservatoryMapCanvas({
       return;
     }
 
-    const initialLocation = initialLocationRef.current;
-    const initialRadiusNauticalMiles = initialRadiusNauticalMilesRef.current;
-
-    const map = new maplibregl.Map({
-      container: mapNodeRef.current,
-      style: activeMapStyleUrlRef.current,
-      center: [
-        initialLocation.coordinates.longitude,
-        initialLocation.coordinates.latitude,
-      ],
-      zoom: initialZoomForRadius(initialRadiusNauticalMiles),
-      bearing: 0,
-      pitch: pitchForRadius(initialRadiusNauticalMiles),
-      attributionControl: false,
-    });
-
-    map.addControl(
-      new maplibregl.AttributionControl({ compact: true }),
-      "bottom-right",
-    );
-
-    const resizeFrame = window.requestAnimationFrame(() => map.resize());
-
-    map.on("error", (event: { error?: Error }) => {
-      if (event.error) {
-        console.error("MapLibre error", event.error);
+    let isDisposed = false;
+    let map: MapLibreMap | null = null;
+    let resizeFrame: number | null = null;
+    const creationFrame = window.requestAnimationFrame(() => {
+      if (isDisposed || !mapNodeRef.current || mapRef.current) {
+        return;
       }
+
+      const nextLocation = latestLocationRef.current;
+      const nextRadiusNauticalMiles = latestRadiusRef.current;
+      map = new maplibregl.Map({
+        container: mapNodeRef.current,
+        style: activeMapStyleUrlRef.current,
+        center: [
+          nextLocation.coordinates.longitude,
+          nextLocation.coordinates.latitude,
+        ],
+        zoom: initialZoomForRadius(nextRadiusNauticalMiles),
+        bearing: 0,
+        pitch: pitchForRadius(nextRadiusNauticalMiles),
+        attributionControl: false,
+      });
+
+      map.addControl(
+        new maplibregl.AttributionControl({ compact: true }),
+        "bottom-right",
+      );
+
+      resizeFrame = window.requestAnimationFrame(() => map?.resize());
+
+      map.on("error", (event: { error?: Error }) => {
+        if (event.error?.name === "AbortError") {
+          return;
+        }
+
+        if (event.error) {
+          console.error("MapLibre error", event.error);
+        }
+      });
+
+      map.once("style.load", () => {
+        if (!map || isDisposed) {
+          return;
+        }
+
+        hydrateMapStyle(
+          map,
+          nextLocation.coordinates,
+          nextRadiusNauticalMiles,
+        );
+      });
+
+      mapRef.current = map;
     });
-
-    map.once("style.load", () =>
-      hydrateMapStyle(
-        map,
-        initialLocation.coordinates,
-        initialRadiusNauticalMiles,
-      ),
-    );
-
-    mapRef.current = map;
 
     return () => {
-      window.cancelAnimationFrame(resizeFrame);
-      map.remove();
-      mapRef.current = null;
+      isDisposed = true;
+      window.cancelAnimationFrame(creationFrame);
+
+      if (resizeFrame !== null) {
+        window.cancelAnimationFrame(resizeFrame);
+      }
+
+      if (!map) {
+        return;
+      }
+
+      if (mapRef.current === map) {
+        mapRef.current = null;
+      }
+
+      try {
+        map.remove();
+      } catch (error) {
+        if (!(error instanceof Error) || error.name !== "AbortError") {
+          throw error;
+        }
+      }
     };
   }, [hydrateMapStyle]);
 
@@ -213,6 +266,31 @@ export function ObservatoryMapCanvas({
     );
     map.setStyle(nextMapStyleUrl);
   }, [hydrateMapStyle, location.coordinates, radiusNauticalMiles, sunPhase]);
+
+  useEffect(() => {
+    if (
+      !mapRef.current ||
+      activeMapStyleUrlRef.current !== getMapStyleUrl(sunPhase)
+    ) {
+      return;
+    }
+
+    const aircraftToRender =
+      animatedAircraftRef.current.length > 0 ? animatedAircraftRef.current : aircraft;
+
+    renderAircraft(layers.aircraft ? aircraftToRender : []);
+    renderAnimals(layers.animals ? animalObservations : []);
+    renderBoats(layers.boats ? boats : []);
+  }, [
+    aircraft,
+    animalObservations,
+    boats,
+    layers,
+    renderAircraft,
+    renderAnimals,
+    renderBoats,
+    sunPhase,
+  ]);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -236,6 +314,11 @@ export function ObservatoryMapCanvas({
       mapRef.current,
       "receiver-position",
       buildReceiverFeatureCollection(location.coordinates),
+    );
+    updateSource(
+      mapRef.current,
+      "receiver-guides",
+      buildGuideFeatureCollection(location.coordinates, radiusNauticalMiles),
     );
   }, [location, mapRotationDegrees, radiusNauticalMiles]);
 
@@ -313,7 +396,7 @@ export function ObservatoryMapCanvas({
       <div
         ref={mapNodeRef}
         className="map-canvas"
-        aria-label="Live observatory map"
+        aria-label="Live observatory field"
       />
     </div>
   );

@@ -8,10 +8,10 @@ type LocationPromptProps = {
 export function LocationPrompt({ status, onRetry }: LocationPromptProps) {
   const message =
     status === "denied"
-      ? "Location permission is needed to tune the local sky."
+      ? "Location permission is needed to tune the local field."
       : status === "unsupported"
         ? "This browser does not support geolocation."
-        : "Finding your local sky...";
+        : "Finding your local field...";
 
   return (
     <div className="location-prompt">
