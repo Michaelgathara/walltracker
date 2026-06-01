@@ -3,9 +3,21 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Boat, BoatFeed } from "@/types";
 import { boatRefreshIntervalMs } from "../constants";
+import { boatFeedSchema } from "../lib/feed-schemas";
 import type { FeedState, LocationState } from "../types";
 
-export function useBoatFeed(location: LocationState, radiusNauticalMiles: number) {
+const hiddenBoatFeedState = {
+  status: "idle",
+  label: "Boats",
+  count: 0,
+  message: "Boats layer is hidden.",
+} satisfies FeedState;
+
+export function useBoatFeed(
+  location: LocationState,
+  radiusNauticalMiles: number,
+  isActive: boolean,
+) {
   const [boats, setBoats] = useState<Boat[]>([]);
   const [boatFeedState, setBoatFeedState] = useState<FeedState>({
     status: "idle",
@@ -16,7 +28,7 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
 
   const fetchBoats = useCallback(
     async (signal?: AbortSignal) => {
-      if (location.status !== "ready") {
+      if (!isActive || location.status !== "ready") {
         return;
       }
 
@@ -47,7 +59,7 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
         throw new Error("Boat feed unavailable");
       }
 
-      const feed = (await response.json()) as BoatFeed;
+      const feed = boatFeedSchema.parse(await response.json()) satisfies BoatFeed;
       setBoats(feed.boats);
       setBoatFeedState({
         status: "ready",
@@ -57,10 +69,14 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
         updatedAt: feed.fetchedAt,
       });
     },
-    [location, radiusNauticalMiles],
+    [isActive, location, radiusNauticalMiles],
   );
 
   useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
     if (location.status !== "ready") {
       return;
     }
@@ -87,9 +103,9 @@ export function useBoatFeed(location: LocationState, radiusNauticalMiles: number
       window.clearTimeout(firstLoad);
       window.clearInterval(timer);
     };
-  }, [fetchBoats, location]);
+  }, [fetchBoats, isActive, location]);
 
-  return { boats, boatFeedState };
+  return { boats, boatFeedState: isActive ? boatFeedState : hiddenBoatFeedState };
 }
 
 function buildBoatStatusMessage(feed: BoatFeed, radiusNauticalMiles: number) {

@@ -1,13 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { AnimalObservation, AnimalObservationFeed } from "@/types";
+import type { AnimalObservation } from "@/types";
 import { animalRefreshIntervalMs } from "../constants";
+import { animalObservationFeedSchema } from "../lib/feed-schemas";
 import type { FeedState, LocationState } from "../types";
+
+const hiddenAnimalFeedState = {
+  status: "idle",
+  label: "Animals",
+  count: 0,
+  message: "Animals layer is hidden.",
+} satisfies FeedState;
 
 export function useAnimalFeed(
   location: LocationState,
   radiusNauticalMiles: number,
+  isActive: boolean,
 ) {
   const [animalObservations, setAnimalObservations] = useState<AnimalObservation[]>([]);
   const [animalFeedState, setAnimalFeedState] = useState<FeedState>({
@@ -19,7 +28,7 @@ export function useAnimalFeed(
 
   const fetchAnimals = useCallback(
     async (signal?: AbortSignal) => {
-      if (location.status !== "ready") {
+      if (!isActive || location.status !== "ready") {
         return;
       }
 
@@ -39,7 +48,7 @@ export function useAnimalFeed(
         throw new Error("Animal observation feed unavailable");
       }
 
-      const feed = (await response.json()) as AnimalObservationFeed;
+      const feed = animalObservationFeedSchema.parse(await response.json());
       setAnimalObservations(feed.observations);
       setAnimalFeedState({
         status: "ready",
@@ -49,10 +58,14 @@ export function useAnimalFeed(
         updatedAt: feed.fetchedAt,
       });
     },
-    [location, radiusNauticalMiles],
+    [isActive, location, radiusNauticalMiles],
   );
 
   useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
     if (location.status !== "ready") {
       return;
     }
@@ -79,7 +92,10 @@ export function useAnimalFeed(
       window.clearTimeout(firstLoad);
       window.clearInterval(timer);
     };
-  }, [fetchAnimals, location]);
+  }, [fetchAnimals, isActive, location]);
 
-  return { animalObservations, animalFeedState };
+  return {
+    animalObservations,
+    animalFeedState: isActive ? animalFeedState : hiddenAnimalFeedState,
+  };
 }

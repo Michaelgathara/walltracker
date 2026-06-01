@@ -1,14 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { Aircraft, AircraftFeed } from "@/types";
+import type { Aircraft } from "@/types";
 import { aircraftRefreshIntervalMs } from "../constants";
 import { mergeAircraftTracks } from "../lib/aircraft-animation";
+import { aircraftFeedSchema } from "../lib/feed-schemas";
 import type { FeedState, LocationState } from "../types";
+
+const hiddenAircraftFeedState = {
+  status: "idle",
+  label: "Aircraft",
+  count: 0,
+  message: "Aircraft layer is hidden.",
+} satisfies FeedState;
 
 export function useAircraftFeed(
   location: LocationState,
   radiusNauticalMiles: number,
+  isActive: boolean,
 ) {
   const [aircraft, setAircraft] = useState<Aircraft[]>([]);
   const [feedState, setFeedState] = useState<FeedState>({
@@ -20,7 +29,7 @@ export function useAircraftFeed(
 
   const fetchAircraft = useCallback(
     async (signal?: AbortSignal) => {
-      if (location.status !== "ready") {
+      if (!isActive || location.status !== "ready") {
         return;
       }
 
@@ -40,7 +49,7 @@ export function useAircraftFeed(
         throw new Error("Aircraft feed unavailable");
       }
 
-      const feed = (await response.json()) as AircraftFeed;
+      const feed = aircraftFeedSchema.parse(await response.json());
 
       setAircraft((existingAircraft) =>
         mergeAircraftTracks(existingAircraft, feed.aircraft),
@@ -53,10 +62,14 @@ export function useAircraftFeed(
         updatedAt: feed.fetchedAt,
       });
     },
-    [location, radiusNauticalMiles],
+    [isActive, location, radiusNauticalMiles],
   );
 
   useEffect(() => {
+    if (!isActive) {
+      return;
+    }
+
     if (location.status !== "ready") {
       return;
     }
@@ -83,7 +96,7 @@ export function useAircraftFeed(
       window.clearTimeout(firstLoad);
       window.clearInterval(timer);
     };
-  }, [fetchAircraft, location]);
+  }, [fetchAircraft, isActive, location]);
 
-  return { aircraft, feedState };
+  return { aircraft, feedState: isActive ? feedState : hiddenAircraftFeedState };
 }
